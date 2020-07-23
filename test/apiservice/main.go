@@ -18,7 +18,8 @@ var client pb.SchedulerClient
 
 func main() {
 	Init()
-	test()
+	//test()
+	testTimer()
 }
 
 func Init() {
@@ -32,6 +33,44 @@ func Init() {
 	client = pb.NewSchedulerClient(conn)
 }
 
+//测试定时函数用例
+func testTimer() {
+	for {
+		time.Sleep(time.Millisecond * 5000)
+		req := pb.AcquireContainerRequest{
+			RequestId:    "03decb9a-5e32-407e-9c8f-2a1390c5feb",
+			AccountId:    "1317891723692367",
+			FunctionName: "pre_function_15",
+			FunctionConfig: &pb.FunctionConfig{
+				TimeoutInMs:   60000,
+				MemoryInBytes: 536870912,
+				Handler:       "pre_handler_15",
+			},
+		}
+		client.AcquireContainer(context.Background(), &req)
+		time.Sleep(time.Millisecond * 500)
+
+		req2 := pb.ReturnContainerRequest{
+			RequestId:             "03decb9a-5e32-407e-9c8f-2a1390c5feb",
+			ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
+			DurationInNanos:       1005291237,
+			MaxMemoryUsageInBytes: 7278592,
+		}
+		client.ReturnContainer(context.Background(), &req2)
+	}
+}
+
+//测试内存用例
+func testMemoryIntensive() {
+
+}
+
+//测试cpu用例
+func testCpuIntensive() {
+
+}
+
+//线上测试用例
 func test() {
 	// 读取一个文件的内容
 	file, err := os.Open("/Users/fht/Desktop/serverless/api-service-function-call.txt")
