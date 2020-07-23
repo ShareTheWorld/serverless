@@ -1,7 +1,6 @@
 package main
 
 import (
-	"com/aliyun/serverless/scheduler/client"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"com/aliyun/serverless/scheduler/server"
 	global "com/aliyun/serverless/scheduler/utils/groble"
@@ -15,9 +14,9 @@ import (
 
 func main() {
 	InitResourceMainEndpoint()
-	//StartSchedulerService()
+	StartSchedulerService()
 
-	client.Test()
+	//client.Test()
 
 }
 
