@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	pb "com/aliyun/serverless/scheduler/proto"
+	"context"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc"
 	"io"
 	"os"
 	"strconv"
@@ -12,8 +14,25 @@ import (
 	"time"
 )
 
-func main() {
+var client pb.SchedulerClient
 
+func main() {
+	Init()
+	test()
+}
+
+func Init() {
+	//连接到grpc服务
+	conn, err := grpc.Dial(Address, grpc.WithInsecure())
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//初始化客户端
+	client = pb.NewSchedulerClient(conn)
+}
+
+func test() {
 	// 读取一个文件的内容
 	file, err := os.Open("/Users/fht/Desktop/serverless/api-service-function-call.txt")
 	if err != nil {
@@ -31,7 +50,7 @@ func main() {
 	i := 0
 	for {
 		i++
-		fmt.Print(i)
+		fmt.Printf("第%v行 ", i)
 		fmt.Print("   ")
 		data, _, err := r.ReadLine()
 		// 读取到末尾退出
@@ -54,12 +73,11 @@ func main() {
 			if diffTime > 1000 {
 				time.Sleep(time.Nanosecond * time.Duration(diffTime))
 			}
-			e2 := time.Now().UnixNano()
-			s2 := (e2 - s1) / 1000
 			preTime = callTime
-			fmt.Print(diffTime / 1000)
-			fmt.Print("  ")
-			fmt.Println(s2)
+			fmt.Printf("diff=%vms real=%vms ", diffTime/1000000, (time.Now().UnixNano()-s1)/1000000)
+			if diffTime > 1000000000 { //如果等待时间大于1秒
+				fmt.Print("\n\n\n")
+			}
 		}
 		bool := strings.Contains(arr[1], "function_config")
 		if bool {
@@ -69,6 +87,7 @@ func main() {
 				fmt.Print(callTime)
 				fmt.Print("   ")
 				fmt.Println(req1)
+				client.AcquireContainer(context.Background(), req1)
 			}
 		} else {
 			req2 := new(pb.ReturnContainerRequest)
@@ -76,30 +95,10 @@ func main() {
 				fmt.Print(callTime)
 				fmt.Print("   ")
 				fmt.Println(req2)
+				client.ReturnContainer(context.Background(), req2)
+
 			}
 		}
-		//fmt.Println(str)
 	}
 	fmt.Println(time.Now())
-}
-
-type Req1 struct {
-	CallTime       int64        `json:"call_time"`
-	RequestId      string       `json:"request_id"`
-	AccountId      string       `json:"account_id"`
-	FunctionName   string       `json:"function_name"`
-	FunctionConfig FunctionName `json:"function_config"`
-}
-type FunctionName struct {
-	TimeoutInMs   int64  `json:"timeout_in_ms"`
-	MemoryInBytes int64  `json:"memory_in_bytes"`
-	Handler       string `json:"handler"`
-}
-
-type Req2 struct {
-	CallTime              int64  `json:"call_time"`
-	RequestId             string `json:"request_id"`
-	ContainerId           string `json:"container_id"`
-	DurationInNanos       int64  `json:"duration_in_nanos"`
-	MaxMemoryUsageInBytes int64  `json:"max_memory_usage_in_bytes"`
 }
