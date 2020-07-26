@@ -1,17 +1,74 @@
 package core
 
 import (
+	"com/aliyun/serverless/scheduler/client"
 	pb "com/aliyun/serverless/scheduler/proto"
+	uuid "github.com/satori/go.uuid"
 )
 
-func AcquireContainer(requestId string, accountId string, functionName string, timeoutInMs int64, memoryInBytes int64, handler string) (*pb.AcquireContainerReply, error) {
+//请求
+func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
+	//node和node里面的container信息
+	node, container := QueryNodeAndContainer(req.FunctionName, req.FunctionConfig.MemoryInBytes)
 
-	reply := new(pb.AcquireContainerReply)
-	return reply, nil
+	//如果node为nil，就实力化创建一个一个
+	if node == nil {
+		//预约一个node
+		reply, err := client.ReserveNode("", req.AccountId)
+		if err != nil {
+			return nil, err
+		}
+
+		//ReservedTimeTimestampMs ReleasedTimeTimestampMs
+		node = NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, reply.Node.MemoryInBytes)
+		nodeClient, err := client.ConnectNodeService(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort)
+		if err != nil {
+			//TODO 由于连接错误，需要释放Node
+			return nil, err
+		}
+
+		//创建成功node并且连接成功，进行节点添加
+		node.Client = nodeClient
+		AddNode(node)
+	}
+
+	if container == nil {
+		//创建一个container
+		reply, err := client.CreateContainer(
+			node.Client,
+			req.RequestId,
+			req.FunctionName+uuid.NewV4().String(),
+			req.FunctionName,
+			req.FunctionConfig.Handler,
+			req.FunctionConfig.TimeoutInMs,
+			req.FunctionConfig.MemoryInBytes,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		//将container添加到node中
+		container = &Container{FunName: req.FunctionName, Id: reply.ContainerId, UsedMem: req.FunctionConfig.MemoryInBytes}
+		node.AddContainer(container)
+	}
+
+	container, err := RentNC(req.RequestId, node, container)
+	if err != nil { //租用container出错
+		return nil, err
+	}
+
+	r := pb.AcquireContainerReply{
+		NodeId:          node.NodeID,
+		NodeAddress:     node.Address,
+		NodeServicePort: node.Port,
+		ContainerId:     container.Id,
+	}
+	return &r, nil
 }
 
-func ReturnContainer(requestId string, containerId string, durationInNanos int64, maxMemoryUsageInBytes int64, errorCode string, errorMessage string) (*pb.ReturnContainerReply, error) {
-
-	reply := new(pb.ReturnContainerReply)
-	return reply, nil
+//归还
+func ReturnContainer(req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
+	//req{RequestId,ContainerId,DurationInNanos,MaxMemoryUsageInBytes,ErrorCode,ErrorMessage}
+	ReturnNC(req.RequestId)
+	return nil, nil
 }

@@ -24,9 +24,10 @@ func (s ResourceManagerService) ReserveNode(ctx context.Context, in *pb.ReserveN
 	res := new(pb.ReserveNodeReply)
 	res.Node = new(pb.NodeDesc)
 	id++
-	res.Node.Id = "1"
+	res.Node.Id = fmt.Sprintf("node_id_00%v", id)
 	res.Node.Address = "127.0.0.1"
 	res.Node.NodeServicePort = 30000
+	res.Node.MemoryInBytes = 4 * 1024 * 1024 * 1024
 	return res, nil
 }
 
@@ -51,7 +52,7 @@ func (s ResourceManagerService) GetNodesUsage(ctx context.Context, in *pb.GetNod
 	return res, nil
 }
 func main() {
-	listen, err := net.Listen("tcp", "127.0.0.1:10250")
+	listen, err := net.Listen("tcp", "127.0.0.1:20000")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -61,6 +62,6 @@ func main() {
 	//注册HelloServer为客户端提供服务
 	pb.RegisterResourceManagerServer(s, ResourceManagerService{})
 
-	fmt.Println("Resource Manager Service Listen on 127.0.0.1:10250")
+	fmt.Println("Resource Manager Service Listen on 127.0.0.1:20000")
 	s.Serve(listen)
 }

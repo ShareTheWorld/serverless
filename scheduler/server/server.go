@@ -22,8 +22,7 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return nil, status.Errorf(codes.InvalidArgument, "function config cannot be nil")
 	}
 
-	reply, err := core.AcquireContainer(req.RequestId, req.AccountId, req.FunctionName,
-		req.FunctionConfig.TimeoutInMs, req.FunctionConfig.MemoryInBytes, req.FunctionConfig.Handler)
+	reply, err := core.AcquireContainer(req)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +31,6 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 
 func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
 	fmt.Println(req)
-	reply, err := core.ReturnContainer(req.RequestId, req.ContainerId, req.DurationInNanos,
-		req.MaxMemoryUsageInBytes, req.ErrorCode, req.ErrorMessage)
+	reply, err := core.ReturnContainer(req)
 	return reply, err
 }

@@ -15,9 +15,6 @@ import (
 func main() {
 	InitResourceMainEndpoint()
 	StartSchedulerService()
-
-	//client.Test()
-
 }
 
 //获取环境变量，资源管理器的地址

@@ -19,7 +19,9 @@ var client pb.SchedulerClient
 func main() {
 	Init()
 	//test()
-	testTimer()
+	//testTimer()
+
+	test1()
 }
 
 func Init() {
@@ -31,6 +33,28 @@ func Init() {
 
 	//初始化客户端
 	client = pb.NewSchedulerClient(conn)
+}
+
+func test1() {
+	req := pb.AcquireContainerRequest{
+		RequestId:    "03decb9a-5e32-407e-9c8f-2a1390c5feb",
+		AccountId:    "1317891723692367",
+		FunctionName: "pre_function_15",
+		FunctionConfig: &pb.FunctionConfig{
+			TimeoutInMs:   60000,
+			MemoryInBytes: 536870912,
+			Handler:       "pre_handler_15",
+		},
+	}
+	reply, _ := client.AcquireContainer(context.Background(), &req)
+	fmt.Println(reply)
+	//req2 := pb.ReturnContainerRequest{
+	//	RequestId:             "03decb9a-5e32-407e-9c8f-2a1390c5feb",
+	//	ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
+	//	DurationInNanos:       1005291237,
+	//	MaxMemoryUsageInBytes: 7278592,
+	//}
+	//client.ReturnContainer(context.Background(), &req2)
 }
 
 //测试定时函数用例

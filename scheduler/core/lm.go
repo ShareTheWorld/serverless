@@ -5,7 +5,10 @@ import (
 	"fmt"
 )
 
-//ListMap工具，数据放在List，使用Map建立索引
+/*
+ListMap工具，数据放在List，使用Map建立索引
+*/
+
 type LM struct {
 	L *list.List
 	M map[string]*list.Element

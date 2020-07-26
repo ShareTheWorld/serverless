@@ -4,6 +4,7 @@ import (
 	pb "com/aliyun/serverless/nodeservice/proto"
 	"context"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -24,6 +25,7 @@ func (s NodeService) CreateContainer(ctx context.Context, in *pb.CreateContainer
 	fmt.Println("call function: NodeService.CreateContainer")
 	fmt.Println(in)
 	res := new(pb.CreateContainerReply)
+	res.ContainerId = uuid.NewV4().String()
 	return res, nil
 }
 
