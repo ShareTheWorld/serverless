@@ -1,6 +1,9 @@
 package core
 
-import pb "com/aliyun/serverless/nodeservice/proto"
+import (
+	pb "com/aliyun/serverless/nodeservice/proto"
+	"github.com/pkg/errors"
+)
 
 //存放节点信息
 type Node struct {
@@ -28,8 +31,23 @@ func (node *Node) RemoveContainer(containerId string) {
 
 }
 
+//租用container，会消耗内存
+func (node *Node) RentContainer(container *Container) (*Container, error) {
+
+	c := node.QueryContainer(container.FunName, container.UsedMem)
+	if c == nil {
+		return nil, errors.New("No Containers available or lack of memory")
+	}
+	node.UsedMem += c.UsedMem
+	return c, nil
+}
+
+func (node *Node) ReturnContainer(container *Container) {
+	node.UsedMem -= container.UsedMem
+}
+
 //查询container，不会消耗内存
-func (node *Node) GetContainer(funcName string, reqMem int64) *Container {
+func (node *Node) QueryContainer(funcName string, reqMem int64) *Container {
 	//如果内存不够就直接返回
 	if node.UsedMem+reqMem > node.MaxMem {
 		return nil

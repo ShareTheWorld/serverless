@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"io"
 	"os"
@@ -36,8 +37,9 @@ func Init() {
 }
 
 func test1() {
+	id := uuid.NewV4().String()
 	req := pb.AcquireContainerRequest{
-		RequestId:    "03decb9a-5e32-407e-9c8f-2a1390c5feb",
+		RequestId:    id,
 		AccountId:    "1317891723692367",
 		FunctionName: "pre_function_15",
 		FunctionConfig: &pb.FunctionConfig{
@@ -48,13 +50,13 @@ func test1() {
 	}
 	reply, _ := client.AcquireContainer(context.Background(), &req)
 	fmt.Println(reply)
-	//req2 := pb.ReturnContainerRequest{
-	//	RequestId:             "03decb9a-5e32-407e-9c8f-2a1390c5feb",
-	//	ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
-	//	DurationInNanos:       1005291237,
-	//	MaxMemoryUsageInBytes: 7278592,
-	//}
-	//client.ReturnContainer(context.Background(), &req2)
+	req2 := pb.ReturnContainerRequest{
+		RequestId:             id,
+		ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
+		DurationInNanos:       1005291237,
+		MaxMemoryUsageInBytes: 7278592,
+	}
+	client.ReturnContainer(context.Background(), &req2)
 }
 
 //测试定时函数用例

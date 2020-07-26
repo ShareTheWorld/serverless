@@ -36,7 +36,7 @@ func (lm *LM) Get(id string) interface{} {
 	if a == nil {
 		return nil
 	}
-	node := a.Value.(*interface{})
+	node := a.Value.(interface{})
 	return node
 }
 
@@ -60,13 +60,14 @@ func (lm *LM) Println() {
 	fmt.Println()
 }
 
-//func main() {
-//	lm := NewLM()
-//	lm.Add("1", Node{NodeID: "1111"})
-//	lm.Add("2", Node{NodeID: "2222"})
-//	lm.Add("3", Node{NodeID: "3333"})
-//	lm.Remove("2")
-//	lm.Add("2", Node{NodeID: "2222"})
-//	lm.Println()
-//
-//}
+func main() {
+	lm := NewLM()
+	lm.Add("1", &Node{NodeID: "1111"})
+	lm.Add("2", &Node{NodeID: "2222"})
+	lm.Add("3", &Node{NodeID: "3333"})
+	lm.Get("1")
+	lm.Remove("2")
+	lm.Add("2", Node{NodeID: "2222"})
+	lm.Println()
+
+}

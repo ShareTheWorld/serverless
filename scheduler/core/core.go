@@ -36,8 +36,8 @@ func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerRepl
 		//创建一个container
 		reply, err := client.CreateContainer(
 			node.Client,
-			req.RequestId,
-			req.FunctionName+uuid.NewV4().String(),
+			req.RequestId,                          //demo是这样
+			req.FunctionName+uuid.NewV4().String(), //demo是这样
 			req.FunctionName,
 			req.FunctionConfig.Handler,
 			req.FunctionConfig.TimeoutInMs,
@@ -49,7 +49,7 @@ func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerRepl
 
 		//将container添加到node中
 		container = &Container{FunName: req.FunctionName, Id: reply.ContainerId, UsedMem: req.FunctionConfig.MemoryInBytes}
-		node.AddContainer(container)
+		AddNC(node, container)
 	}
 
 	container, err := RentNC(req.RequestId, node, container)

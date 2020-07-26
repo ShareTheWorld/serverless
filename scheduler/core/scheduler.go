@@ -1,7 +1,5 @@
 package core
 
-import "github.com/pkg/errors"
-
 //存放是Node和Container的关系
 type NC struct {
 	Node      *Node      //租用的那个node
@@ -19,7 +17,7 @@ func QueryNodeAndContainer(funcName string, reqMem int64) (*Node, *Container) {
 	//遍历node, 查询container实例子
 	for e := nodes.L.Front(); nil != e; e = e.Next() {
 		node := e.Value.(*Node)
-		container := node.GetContainer(funcName, reqMem)
+		container := node.QueryContainer(funcName, reqMem)
 		if container != nil {
 			return node, container
 		}
@@ -55,24 +53,24 @@ func ReturnNC(requestId string) {
 
 	node := rent.Node
 	container := rent.Container
-	node.UsedMem -= container.UsedMem
-
+	if node != nil && container != nil {
+		node.ReturnContainer(container)
+	}
 	ncs.Remove(requestId)
+}
+
+//添加一个NC
+func AddNC(node *Node, container *Container) {
+	node.AddContainer(container)
 }
 
 //租用Container，会消耗cpu和内存
 func RentNC(requestId string, node *Node, container *Container) (*Container, error) {
-	if node.UsedMem+container.UsedMem > node.MaxMem {
-		return nil, errors.New("The lack of memory")
+	c, err := node.RentContainer(container)
+	if err != nil {
+		return nil, err
 	}
 
-	//先去查询container
-	c := node.Containers.Get(container.FunName).(*Container)
-	if c == nil {
-		return nil, errors.New("No Containers available")
-	}
-
-	node.UsedMem += c.UsedMem
 	rent := &NC{Node: node, Container: c}
 	ncs.Add(requestId, rent)
 
