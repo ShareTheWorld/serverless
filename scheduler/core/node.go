@@ -52,6 +52,9 @@ func (node *Node) QueryContainer(funcName string, reqMem int64) *Container {
 	if node.UsedMem+reqMem > node.MaxMem {
 		return nil
 	}
-	container := node.Containers.Get(funcName).(*Container)
-	return container
+	container := node.Containers.Get(funcName)
+	if container == nil {
+		return nil
+	}
+	return container.(*Container)
 }

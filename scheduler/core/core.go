@@ -70,5 +70,5 @@ func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerRepl
 func ReturnContainer(req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
 	//req{RequestId,ContainerId,DurationInNanos,MaxMemoryUsageInBytes,ErrorCode,ErrorMessage}
 	ReturnNC(req.RequestId)
-	return nil, nil
+	return &pb.ReturnContainerReply{}, nil
 }
