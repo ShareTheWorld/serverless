@@ -4,7 +4,7 @@ var (
 	//resource manager endpoint ip:port
 	ResourceManagerEndpoint string
 
-	SchedulerServerAddress = "127.0.0.1:10600"
+	SchedulerServerAddress = ":10600"
 
 	// RegionName stores the region name for current module
 	RegionName string

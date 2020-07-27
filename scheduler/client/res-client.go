@@ -22,6 +22,7 @@ func ConnectResourceManagerService(endpoint string) {
 	}
 	//defer resConn.Close()
 
+	fmt.Println("connect to resource manager service success")
 	//初始化客户端
 	resClient = resPb.NewResourceManagerClient(resConn)
 }
