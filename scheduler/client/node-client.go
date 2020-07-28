@@ -27,11 +27,13 @@ func ConnectNodeService(id string, address string, port int64) (nodePb.NodeServi
 
 //创建容器
 func CreateContainer(nodeClient nodePb.NodeServiceClient, requestId string, name string, functionName string, handler string, timeoutInMs int64, memoryInBytes int64) (*nodePb.CreateContainerReply, error) {
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	req := nodePb.CreateContainerRequest{RequestId: requestId, Name: name, FunctionMeta: &nodePb.FunctionMeta{FunctionName: functionName, Handler: handler, TimeoutInMs: timeoutInMs, MemoryInBytes: memoryInBytes}}
 	res, err := nodeClient.CreateContainer(ctx, &req)
+	fmt.Printf("create container: requestId:%v,functionName:%v,handler:%v,timeoutInMs:%v,memoryInBytes:%v,rply:%v,err:%v \n", requestId, functionName, handler, timeoutInMs, memoryInBytes, res, err)
 	return res, err
 }
 

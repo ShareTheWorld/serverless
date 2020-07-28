@@ -37,6 +37,7 @@ func ReserveNode(requestId string, accountId string) (*resPb.ReserveNodeReply, e
 
 	req := resPb.ReserveNodeRequest{RequestId: requestId, AccountId: accountId}
 	res, err := resClient.ReserveNode(ctx, &req)
+	fmt.Printf("reserve node: requestId:%v,accountId:%v,reply:%v,err:%v \n", requestId, accountId, res, err)
 	return res, err
 }
 

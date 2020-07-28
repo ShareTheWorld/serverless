@@ -18,6 +18,7 @@ type Node struct {
 
 func NewNode(nodeId string, address string, port int64, maxMem int64) *Node {
 	node := &Node{NodeID: nodeId, Address: address, Port: port, MaxMem: maxMem, Containers: NewLM()}
+	node.MaxMem -= 512 * 1024 * 1024 //每个节点预留512M的空间，不使用完
 	return node
 }
 

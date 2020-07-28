@@ -6,6 +6,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+//初始化，开头盛情一定数量的节点
+func Init() {
+
+}
+
 //请求
 func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
 	//node和node里面的container信息
