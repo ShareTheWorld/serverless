@@ -1,6 +1,8 @@
 package core
 
-import "sync"
+import (
+	"sync"
+)
 
 //存放是Node和Container的关系
 type NC struct {
@@ -58,7 +60,12 @@ func RemoveNode(nodeId string) {
 func ReturnNC(requestId string) {
 	lock.Lock()
 	defer lock.Unlock()
-	rent := ncs.Get(requestId).(*NC)
+
+	nc := ncs.Get(requestId)
+	if nc == nil {
+		return
+	}
+	rent := nc.(*NC)
 	if rent == nil { //没有租借信息，就直接返回
 		ncs.Remove(requestId)
 		return

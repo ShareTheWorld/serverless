@@ -16,6 +16,7 @@ import (
 )
 
 var client pb.SchedulerClient
+
 const (
 	Address = "127.0.0.1:10600"
 )
@@ -148,28 +149,31 @@ func test() {
 			}
 		}
 		bool := strings.Contains(arr[1], "function_config")
-		if bool {
-			req1 := new(pb.AcquireContainerRequest)
-			req1.FunctionConfig = new(pb.FunctionConfig)
-			if err := json.Unmarshal([]byte(arr[1]), &req1); err == nil {
-				fmt.Print(callTime)
-				fmt.Print("   ")
-				fmt.Println(req1)
-				reply, err := client.AcquireContainer(context.Background(), req1)
-				fmt.Println(reply)
-				fmt.Println(err)
+		go func() {
+			if bool {
+				req1 := new(pb.AcquireContainerRequest)
+				req1.FunctionConfig = new(pb.FunctionConfig)
+				if err := json.Unmarshal([]byte(arr[1]), &req1); err == nil {
+					fmt.Print(callTime)
+					fmt.Print("   ")
+					fmt.Println(req1)
+					reply, err := client.AcquireContainer(context.Background(), req1)
+					fmt.Println(reply)
+					fmt.Println(err)
+				}
+			} else {
+				req2 := new(pb.ReturnContainerRequest)
+				if err := json.Unmarshal([]byte(arr[1]), &req2); err == nil {
+					fmt.Print(callTime)
+					fmt.Print("   ")
+					fmt.Println(req2)
+					reply, err := client.ReturnContainer(context.Background(), req2)
+					fmt.Println(reply)
+					fmt.Println(err)
+				}
 			}
-		} else {
-			req2 := new(pb.ReturnContainerRequest)
-			if err := json.Unmarshal([]byte(arr[1]), &req2); err == nil {
-				fmt.Print(callTime)
-				fmt.Print("   ")
-				fmt.Println(req2)
-				reply, err := client.ReturnContainer(context.Background(), req2)
-				fmt.Println(reply)
-				fmt.Println(err)
-			}
-		}
+		}()
+
 	}
 	fmt.Println(time.Now())
 }

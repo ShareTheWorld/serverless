@@ -14,16 +14,15 @@ type NodeService struct {
 
 //预定
 func (s NodeService) Reserve(ctx context.Context, in *pb.ReserveRequest) (*pb.ReserveReply, error) {
-	fmt.Println("call function: NodeService.Reserve")
-	fmt.Println(in)
+	fmt.Printf("call function: NodeService.Reserve, %v\n", in)
+	//time.Sleep(time.Millisecond * 100)
 	res := new(pb.ReserveReply)
 	return res, nil
 }
 
 //创建容器
 func (s NodeService) CreateContainer(ctx context.Context, in *pb.CreateContainerRequest) (*pb.CreateContainerReply, error) {
-	fmt.Println("call function: NodeService.CreateContainer")
-	fmt.Println(in)
+	fmt.Printf("call function: NodeService.CreateContainer, %v\n", in)
 	res := new(pb.CreateContainerReply)
 	res.ContainerId = uuid.NewV4().String()
 	return res, nil
@@ -31,23 +30,20 @@ func (s NodeService) CreateContainer(ctx context.Context, in *pb.CreateContainer
 
 //销毁容器
 func (s NodeService) RemoveContainer(ctx context.Context, in *pb.RemoveContainerRequest) (*pb.RemoveContainerReply, error) {
-	fmt.Println("call function: NodeService.RemoveContainer")
-	fmt.Println(in)
+	fmt.Printf("call function: NodeService.RemoveContainer, %v\n", in)
 	res := new(pb.RemoveContainerReply)
 	return res, nil
 }
 
 //调用函数
 func (s NodeService) InvokeFunction(in *pb.InvokeFunctionRequest, out pb.NodeService_InvokeFunctionServer) error {
-	fmt.Println("call function: NodeService.InvokeFunction")
-	fmt.Println(in)
+	fmt.Printf("call function: NodeService.InvokeFunction, %v\n", in)
 	return nil
 }
 
 //得到容器状态
 func (s NodeService) GetStats(ctx context.Context, in *pb.GetStatsRequest) (*pb.GetStatsReply, error) {
-	fmt.Println("call function: NodeService.GetStats")
-	fmt.Println(in)
+	fmt.Printf("call function: NodeService.GetStats, %v\n", in)
 	res := new(pb.GetStatsReply)
 	return res, nil
 }

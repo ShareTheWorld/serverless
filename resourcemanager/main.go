@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
 
 //type ResourceManagerClient interface {
@@ -19,8 +20,8 @@ type ResourceManagerService struct{}
 var id int
 
 func (s ResourceManagerService) ReserveNode(ctx context.Context, in *pb.ReserveNodeRequest) (*pb.ReserveNodeReply, error) {
-	fmt.Println("call function: ResourceManager.ReserveNode")
-	fmt.Println(in)
+	fmt.Printf("call function: ResourceManager.ReserveNode, %v\n", in)
+	time.Sleep(time.Millisecond * 5000)
 	res := new(pb.ReserveNodeReply)
 	res.Node = new(pb.NodeDesc)
 	id++
@@ -32,15 +33,13 @@ func (s ResourceManagerService) ReserveNode(ctx context.Context, in *pb.ReserveN
 }
 
 func (s ResourceManagerService) ReleaseNode(ctx context.Context, in *pb.ReleaseNodeRequest) (*pb.ReleaseNodeReply, error) {
-	fmt.Println("call function: ResourceManager.ReleaseNode")
-	fmt.Println(in)
+	fmt.Printf("call function: ResourceManager.ReleaseNode, %v\n", in)
 	res := new(pb.ReleaseNodeReply)
 	return res, nil
 }
 
 func (s ResourceManagerService) GetNodesUsage(ctx context.Context, in *pb.GetNodesUsageRequest) (*pb.GetNodesUsageReply, error) {
-	fmt.Println("call function: ResourceManager.GetNodesUsage")
-	fmt.Println(in)
+	fmt.Printf("call function: ResourceManager.GetNodesUsage, %v\n", in)
 	res := new(pb.GetNodesUsageReply)
 
 	//var arr [3]pb.NodeDesc = [3]pb.NodeDesc{

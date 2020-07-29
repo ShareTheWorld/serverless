@@ -9,7 +9,7 @@ protoc --plugin=/Users/fht/.go/bin/protoc-gen-go  --go_out=./ Prod.proto
 
 protoc --plugin=/Users/fht/.go/bin/protoc-gen-go -I . --go_out=plugins=grpc:. ./*.proto
 
-sudo docker run -it  -p 10600:10600 -e "RESOURCE_MANAGER_ENDPOINT=127.0.0.1:20000"  challenge:1.6 /bin/bash
+sudo docker run -it  -p 10600:10600 -e "RESOURCE_MANAGER_ENDPOINT=127.0.0.1:20000"  challenge:7.0.4 /bin/bash
 
   sudo docker run -it --net host  -e "SERVER_PORT=8002"  challenge:1.7 /bin/bash
   sudo docker run -it --net host  -e "SERVER_PORT=8002"  challenge:4.3.1 /bin/bash

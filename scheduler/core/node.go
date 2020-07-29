@@ -34,7 +34,6 @@ func (node *Node) RemoveContainer(containerId string) {
 
 //租用container，会消耗内存
 func (node *Node) RentContainer(container *Container) (*Container, error) {
-
 	c := node.QueryContainer(container.FunName, container.UsedMem)
 	if c == nil {
 		return nil, errors.New("No Containers available or lack of memory")
