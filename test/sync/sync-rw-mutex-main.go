@@ -32,7 +32,7 @@ func write() {
 	waitGroup.Done()
 }
 
-func main() {
+func main2() {
 	start := time.Now()
 	for i := 0; i < 1000; i++ {
 		waitGroup.Add(1)
