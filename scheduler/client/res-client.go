@@ -2,7 +2,7 @@ package client
 
 import (
 	resPb "com/aliyun/serverless/resourcemanager/proto"
-	global "com/aliyun/serverless/scheduler/utils/groble"
+	"com/aliyun/serverless/scheduler/utils/groble"
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
@@ -30,7 +30,7 @@ func ConnectResourceManagerService(endpoint string) {
 //预定节点,requestId可以不用传入
 func ReserveNode(requestId string, accountId string) (*resPb.ReserveNodeReply, error) {
 	if resClient == nil {
-		ConnectResourceManagerService(global.ResourceManagerEndpoint)
+		ConnectResourceManagerService(groble.ResourceManagerEndpoint)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

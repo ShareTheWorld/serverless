@@ -2,9 +2,10 @@ package main
 
 import (
 	"com/aliyun/serverless/scheduler/client"
+	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"com/aliyun/serverless/scheduler/server"
-	global "com/aliyun/serverless/scheduler/utils/groble"
+	"com/aliyun/serverless/scheduler/utils/groble"
 	"fmt"
 	"google.golang.org/grpc"
 	"net"
@@ -15,7 +16,9 @@ import (
 
 func main() {
 	InitResourceMainEndpoint()
-	client.ConnectResourceManagerService(global.ResourceManagerEndpoint)
+	go core.HandleAcquireContainer() //处理请求容器
+	go core.HandleReturnContainer()  //处理归还容器
+	client.ConnectResourceManagerService(groble.ResourceManagerEndpoint)
 	StartSchedulerService()
 }
 
@@ -27,13 +30,13 @@ func InitResourceMainEndpoint() {
 		panic("environment variable RESOURCE_MANAGER_ENDPOINT is not set")
 	}
 	fmt.Println("get resource manager endpoint is :" + endpoint)
-	global.ResourceManagerEndpoint = endpoint
+	groble.ResourceManagerEndpoint = endpoint
 }
 
 //启动Scheduler服务
 func StartSchedulerService() {
 	fmt.Println("Hello GoLang")
-	listen, err := net.Listen("tcp", global.SchedulerServerAddress)
+	listen, err := net.Listen("tcp", groble.SchedulerServerAddress)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -46,7 +49,7 @@ func StartSchedulerService() {
 	s := grpc.NewServer()
 	//注册HelloServer为客户端提供服务
 	pb.RegisterSchedulerServer(s, new(server.Server))
-	fmt.Println("Listen on " + global.SchedulerServerAddress)
+	fmt.Println("Listen on " + groble.SchedulerServerAddress)
 	//listen.Accept()
 	//fmt.Println("connection success ")
 	s.Serve(listen)

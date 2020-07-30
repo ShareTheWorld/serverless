@@ -1,4 +1,4 @@
-package global
+package groble
 
 var (
 	//resource manager endpoint ip:port
@@ -18,3 +18,4 @@ var (
 	// ModuleName stores the host name for current module
 	HostName string
 )
+
