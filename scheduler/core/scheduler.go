@@ -1,9 +1,6 @@
 package core
 
-import (
-	"sync"
-)
-
+/*
 //存放是Node和Container的关系
 type NC struct {
 	Node      *Node      //租用的那个node
@@ -100,3 +97,4 @@ func RentNC(requestId string, node *Node, container *Container) (*Container, err
 
 	return c, nil
 }
+*/

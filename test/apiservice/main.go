@@ -23,10 +23,10 @@ const (
 
 func main() {
 	Init()
-	test()
+	//test()
 	//testTimer()
 
-	//test1()
+	test1()
 }
 
 func Init() {

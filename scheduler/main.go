@@ -16,8 +16,8 @@ import (
 
 func main() {
 	InitResourceMainEndpoint()
-	go core.HandleAcquireContainer() //处理请求容器
-	go core.HandleReturnContainer()  //处理归还容器
+	go core.AcquireContainerHandler() //处理请求容器
+	go core.ReturnContainerHandler()  //处理归还容器
 	client.ConnectResourceManagerService(groble.ResourceManagerEndpoint)
 	StartSchedulerService()
 }

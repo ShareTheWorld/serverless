@@ -17,11 +17,11 @@ func AddReturnContainerToQueue(req *pb.ReturnContainerRequest) {
 	returnQueue <- req
 }
 
-//处理归还容器队列
-func HandleReturnContainer() {
+//容器归还处理者
+func ReturnContainerHandler() {
 	fmt.Println("start handle return container")
 	for {
 		req := <-returnQueue
-		fmt.Println(req)
+		Return(req)
 	}
 }

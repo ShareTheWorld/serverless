@@ -1,17 +1,11 @@
 package core
 
-import (
-	"com/aliyun/serverless/scheduler/client"
-	pb "com/aliyun/serverless/scheduler/proto"
-	uuid "github.com/satori/go.uuid"
-	"sync"
-)
-
 //初始化，开头盛情一定数量的节点
 func Init() {
 
 }
 
+/*
 //请求
 func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
 	//node和node里面的container信息
@@ -99,3 +93,4 @@ func GetNode(accountId string, funcName string, reqMem int64) (*Node, error) {
 	AddNode(node)
 	return node, nil
 }
+*/
