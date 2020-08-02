@@ -21,7 +21,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	var container *core.Container
 	for i := 0; i < core.NodeCount(); i++ {
 		n := core.GetNode(i)
-		c := n.Containers[funcName]
+		c := n.GetContainer(funcName)
 		if c == nil { //判断是否存在想要的方法
 			continue
 		}

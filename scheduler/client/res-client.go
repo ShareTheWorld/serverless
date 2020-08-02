@@ -32,7 +32,7 @@ func ReserveNode(requestId string, accountId string) (*resPb.ReserveNodeReply, e
 	if resClient == nil {
 		ConnectResourceManagerService(groble.ResourceManagerEndpoint)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	req := resPb.ReserveNodeRequest{RequestId: requestId, AccountId: accountId}

@@ -28,7 +28,7 @@ func ConnectNodeService(id string, address string, port int64) (nodePb.NodeServi
 //创建容器
 func CreateContainer(nodeClient nodePb.NodeServiceClient, requestId string, name string, functionName string, handler string, timeoutInMs int64, memoryInBytes int64) (*nodePb.CreateContainerReply, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	req := nodePb.CreateContainerRequest{RequestId: requestId, Name: name, FunctionMeta: &nodePb.FunctionMeta{FunctionName: functionName, Handler: handler, TimeoutInMs: timeoutInMs, MemoryInBytes: memoryInBytes}}
