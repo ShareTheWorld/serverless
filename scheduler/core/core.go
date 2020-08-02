@@ -10,6 +10,7 @@ type Container struct {
 	FunName string //函数名字
 	Id      string //容器id
 	UsedMem int64  //使用内存
+	lock    sync.RWMutex
 }
 
 //存放节点信息
@@ -53,33 +54,83 @@ func AddNode(node *Node) {
 	nodes = append(nodes, node)
 }
 
+//获取第i个位置的节点
 func GetNode(i int) *Node {
 	NodesLock.RLock()
 	defer NodesLock.RUnlock()
 	return nodes[i]
 }
 
-func NodesSize() int {
+//获得nodes的数量
+func NodeCount() int {
 	NodesLock.RLock()
 	defer NodesLock.RUnlock()
 	return len(nodes)
 }
 
+//放入一个请求
 func PutRequestNC(requestId string, nc *NC) {
 	RequestMapLock.Lock()
 	defer RequestMapLock.Unlock()
 	RequestMap[requestId] = nc
 }
 
+//移除一个请求
 func RemoveRequestNC(requestId string) {
 	RequestMapLock.Lock()
 	defer RequestMapLock.Unlock()
 	delete(RequestMap, requestId)
 }
 
+//得到请求
 func GetRequestNC(requestId string) *NC {
 	RequestMapLock.Lock()
 	defer RequestMapLock.Unlock()
 	nc := RequestMap[requestId]
 	return nc
+}
+
+//申请使用Node资源
+func (node *Node) Acquire(reqMem int64) {
+	node.lock.Lock()
+	defer node.lock.Unlock()
+	node.UsedMem += reqMem
+	node.UserCount++
+}
+
+//归还资源
+func (node *Node) Return(reqMem int64) {
+	node.lock.Lock()
+	defer node.lock.Unlock()
+	node.UsedMem -= reqMem
+	node.UserCount--
+}
+
+//判断内存是否足够
+func (node *Node) RequireMem(reqMem int64) bool {
+	node.lock.RLock()
+	defer node.lock.RUnlock()
+	b := node.MaxMem-node.UsedMem > reqMem
+	return b
+}
+
+//得到node内存
+func (node *Node) GetMem() (int64, int64) {
+	node.lock.RLock()
+	defer node.lock.RUnlock()
+	return node.UsedMem, node.MaxMem
+}
+
+//得到容器使用内存大小
+func (container *Container) GetUsedMem() int64 {
+	container.lock.RLock()
+	defer container.lock.RUnlock()
+	return container.UsedMem
+}
+
+//设置内存使用大小
+func (container *Container) SetUsedMem(usedMem int64) {
+	container.lock.Lock()
+	defer container.lock.Unlock()
+	container.UsedMem = usedMem
 }

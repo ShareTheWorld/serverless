@@ -19,14 +19,14 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 
 	var node *core.Node
 	var container *core.Container
-	for i := 0; i < core.NodesSize(); i++ {
+	for i := 0; i < core.NodeCount(); i++ {
 		n := core.GetNode(i)
 		c := n.Containers[funcName]
 		if c == nil { //判断是否存在想要的方法
 			continue
 		}
 
-		if n.MaxMem-n.UsedMem > reqMem { //判断内存是否足够
+		if n.RequireMem(reqMem) { //判断内存是否足够
 			node = n
 			container = c
 			break
@@ -38,8 +38,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	}
 
 	//对node做相应的操作
-	node.UsedMem -= reqMem
-	node.UserCount++
+	node.Acquire(reqMem)
 
 	//在requestMap上做好登记
 	core.PutRequestNC(requestId, &core.NC{Node: node, Container: container})
@@ -65,7 +64,7 @@ func Return(req *pb.ReturnContainerRequest) {
 	node := nc.Node
 	container := nc.Container
 
-	node.UsedMem -= container.UsedMem
-	node.UserCount--
+	node.RequireMem(container.GetUsedMem())
+
 	core.RemoveRequestNC(requestId)
 }

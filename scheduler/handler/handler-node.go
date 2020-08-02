@@ -12,11 +12,12 @@ import (
 	当使用率高的时候就去申请资源，
 	当使用率低的时候就释放资源
 */
-const ReservePress = 0.7             //申请压力
-const ReleasePress = 0.4             //释放压力
-const AccountId = "1317891723692367" //TODO 线上可能会变化
-const MinNodeCount = 2               //最少节点数量
-const MaxNodeCount = 20              //最大节点数量
+const ReservePress = 0.7                 //申请压力
+const ReleasePress = 0.4                 //释放压力
+const AccountId = "1317891723692367"     //TODO 线上可能会变化
+const MinNodeCount = 2                   //最少节点数量
+const MaxNodeCount = 20                  //最大节点数量
+const SleepTime = time.Millisecond * 100 //当没有事干的时候睡眠多少毫秒
 
 //MinNodeCount=a,MaxNodeCount=b
 //(0,a)申请资源
@@ -26,7 +27,7 @@ const MaxNodeCount = 20              //最大节点数量
 
 func NodeHandler() {
 	for {
-		size := core.NodesSize()
+		size := core.NodeCount()
 		//(0,a)申请资源
 		if size < MinNodeCount {
 			node := ReserveOneNode()
@@ -36,7 +37,7 @@ func NodeHandler() {
 		}
 		//[a,a]不管
 		if size == MinNodeCount { //刚好是最小情况，什么也不做
-			time.Sleep(50)
+			time.Sleep(SleepTime)
 			continue
 		}
 
@@ -50,7 +51,7 @@ func NodeHandler() {
 			} else if press < ReleasePress { //当压力小于0.4就释放一个
 				ReleaseOneNode()
 			} else {
-				time.Sleep(50)
+				time.Sleep(SleepTime)
 			}
 			continue
 		}
@@ -59,7 +60,7 @@ func NodeHandler() {
 			if press < ReleasePress {
 				ReleaseOneNode()
 			} else {
-				time.Sleep(50)
+				time.Sleep(SleepTime)
 			}
 			continue
 		}
@@ -68,19 +69,20 @@ func NodeHandler() {
 
 //计算节点的压力
 func calcNodePress() float64 {
-	var totalMem int64 = 0
-	var usedMem int64 = 0
+	var allNodeTotalMem int64 = 0
+	var allNodeUsedMem int64 = 0
 
-	for i := 0; i < core.NodesSize(); i++ {
+	for i := 0; i < core.NodeCount(); i++ {
 		node := core.GetNode(i)
-		totalMem += node.MaxMem
-		usedMem += node.UsedMem
+		usedMem, maxMem := node.GetMem()
+		allNodeTotalMem += maxMem
+		allNodeUsedMem += usedMem
 	}
 
-	if totalMem == 0 {
+	if allNodeTotalMem == 0 {
 		return 1
 	}
-	press := float64(usedMem) / float64(totalMem)
+	press := float64(allNodeUsedMem) / float64(allNodeTotalMem)
 	return press
 }
 
