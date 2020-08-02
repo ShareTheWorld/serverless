@@ -20,29 +20,53 @@ var RequestMapLock sync.Mutex
 
 //对nodes进行插入排序
 func InsertSort(p int, forward bool) {
-	if p < 0 || p > len(nodes) {
+	var n = len(nodes)
+	if n <= 1 {
 		return
 	}
-	if forward { //向前插入，说明增加了使用内存
-		for ; p > 0; p-- {
-			//如果是正确顺序就直接返回
-			if nodes[p-1].UsedMem < nodes[p].UsedMem {
-				nodes[p], nodes[p-1] = nodes[p-1], nodes[p]
+	for i := 1; i < n; i++ {
+		//如果后面一个大于前面一个，就往前挪动
+		for j := i; j > 0; j-- {
+			if nodes[j].UsedMem > nodes[j-1].UsedMem {
+				nodes[j], nodes[j-1] = nodes[j-1], nodes[j]
 			} else {
-				return
-			}
-		}
-	} else { //向后插入，说明减少了使用内存
-		for ; p < len(nodes)-1; p++ {
-			//如果是正确顺序就直接返回
-			if nodes[p+1].UsedMem > nodes[p].UsedMem {
-				nodes[p], nodes[p+1] = nodes[p+1], nodes[p]
-			} else {
-				return
+				break
 			}
 		}
 	}
 
+	//if p < 0 || p > len(nodes) {
+	//	return
+	//}
+	//if forward { //向前插入，说明增加了使用内存
+	//	for ; p > 0; p-- {
+	//		//如果是正确顺序就直接返回
+	//		if nodes[p-1].UsedMem < nodes[p].UsedMem {
+	//			nodes[p], nodes[p-1] = nodes[p-1], nodes[p]
+	//		} else {
+	//			return
+	//		}
+	//	}
+	//} else { //向后插入，说明减少了使用内存
+	//	for ; p < len(nodes)-1; p++ {
+	//		//如果是正确顺序就直接返回
+	//		if nodes[p+1].UsedMem > nodes[p].UsedMem {
+	//			nodes[p], nodes[p+1] = nodes[p+1], nodes[p]
+	//		} else {
+	//			return
+	//		}
+	//	}
+	//}
+	//
+	//fmt.Printf("****************************%v*******************************\n", "test")
+	//for i := 0; i < len(nodes); i++ {
+	//	node := nodes[i]
+	//	fmt.Printf("No:%v, NodeId:%v, Mem:%v/%v, UserCount:%v, containerCount:%v,  %v\n",
+	//		i, node.NodeID, node.UsedMem/1024/1024,
+	//		node.MaxMem/1024/1024, node.UserCount,
+	//		len(node.Containers), node.Containers)
+	//}
+	//fmt.Printf("**************************************************************\n\n")
 }
 
 //添加一个Node
