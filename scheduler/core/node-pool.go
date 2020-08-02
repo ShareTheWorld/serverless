@@ -104,7 +104,10 @@ func PrintNodes(tag string) {
 	fmt.Printf("****************************%v*******************************\n", tag)
 	for i := 0; i < len(nodes); i++ {
 		node := nodes[i]
-		fmt.Printf("%v,%v,%v,%v\n", i, node.NodeID, node.UsedMem/1024/1024, node.UserCount)
+		fmt.Printf("No:%v, NodeId:%v, Mem:%v/%v, UserCount:%v, containerCount:%v,  %v\n",
+			i, node.NodeID, node.UsedMem/1024/1024,
+			node.MaxMem/1024/1024, node.UserCount,
+			len(node.Containers), node.Containers)
 	}
 	fmt.Printf("**************************************************************\n\n")
 

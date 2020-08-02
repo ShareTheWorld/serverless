@@ -56,7 +56,7 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 	mt := MidMap[id]
 	st := StartMap[id]
 	lock.Unlock()
-	fmt.Printf("SL:%v\t,FD:%v\t,RT:%v\t|\tmem:%v\ttime:%v\terr:%v\n", (mt-st)/1000000, (et-mt)/1000000, (et-st)/1000000,
+	fmt.Printf("SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n", (mt-st)/1000000, (et-mt)/1000000, (et-st)/1000000,
 		req.MaxMemoryUsageInBytes/1048576, req.DurationInNanos/1000000, req.ErrorMessage)
 	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil

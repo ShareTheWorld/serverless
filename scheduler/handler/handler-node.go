@@ -4,6 +4,7 @@ import (
 	"com/aliyun/serverless/scheduler/client"
 	"com/aliyun/serverless/scheduler/core"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -95,6 +96,8 @@ func calcNodePress() float64 {
 
 //这个方法需要保证一定要申请一个Node
 func ReserveOneNode() *core.Node {
+	core.PrintNodes("reserve node")
+	st := time.Now().UnixNano()
 	for {
 		//预约一个node
 		reply, err := client.ReserveNode("", AccountId)
@@ -105,15 +108,19 @@ func ReserveOneNode() *core.Node {
 		}
 
 		//ReservedTimeTimestampMs ReleasedTimeTimestampMs
-		node := core.NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, reply.Node.MemoryInBytes)
 		nodeClient, err := client.ConnectNodeService(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort)
 		if err != nil {
 			fmt.Println("error ", err)
 			continue
 		}
-
+		requestId := uuid.NewV4().String()
+		statsReply := client.GetStats(nodeClient, requestId)
+		totalMem := statsReply.GetNodeStats().TotalMemoryInBytes
+		usedMem := statsReply.GetNodeStats().MemoryUsageInBytes
 		//创建成功node并且连接成功，进行节点添加
-		node.Client = nodeClient
+		node := core.NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, totalMem, usedMem, nodeClient)
+		et := time.Now().UnixNano()
+		fmt.Printf("---- reserve node, time=%v, node:%v \n", (et-st)/1000000, node)
 		return node
 	}
 }

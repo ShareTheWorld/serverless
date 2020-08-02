@@ -6,6 +6,7 @@ import (
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
+	"time"
 )
 
 /*
@@ -34,6 +35,8 @@ func ContainerHandler() {
 //
 ////保证创建一个container
 func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Container {
+	core.PrintNodes("create container")
+	st := time.Now().UnixNano()
 	for {
 		//创建一个container
 		reply, err := client.CreateContainer(
@@ -52,6 +55,8 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 
 		//将container添加到node中
 		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId, UsedMem: req.FunctionConfig.MemoryInBytes}
+		et := time.Now().UnixNano()
+		fmt.Printf("---- create container, time=%v, node:%v \n", (et-st)/1000000, node)
 		return container
 	}
 }
