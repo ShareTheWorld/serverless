@@ -1,96 +1,85 @@
 package core
 
-//初始化，开头盛情一定数量的节点
-func Init() {
+import (
+	pb "com/aliyun/serverless/nodeservice/proto"
+	"sync"
+)
 
+//存放container信息
+type Container struct {
+	FunName string //函数名字
+	Id      string //容器id
+	UsedMem int64  //使用内存
 }
 
-/*
-//请求
-func AcquireContainer(req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
-	//node和node里面的container信息
-	node, container := QueryNodeAndContainer(req.FunctionName, req.FunctionConfig.MemoryInBytes)
-
-	//如果node为nil，就实力化创建一个一个
-	if node == nil {
-		var err error
-		node, err = GetNode(req.AccountId, req.FunctionName, req.FunctionConfig.MemoryInBytes)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if container == nil {
-		//创建一个container
-		reply, err := client.CreateContainer(
-			node.Client,
-			req.RequestId,                          //demo是这样
-			req.FunctionName+uuid.NewV4().String(), //demo是这样
-			req.FunctionName,
-			req.FunctionConfig.Handler,
-			req.FunctionConfig.TimeoutInMs,
-			req.FunctionConfig.MemoryInBytes,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		//将container添加到node中
-		container = &Container{FunName: req.FunctionName, Id: reply.ContainerId, UsedMem: req.FunctionConfig.MemoryInBytes}
-		AddNC(node, container)
-	}
-
-	container, err := RentNC(req.RequestId, node, container)
-	if err != nil { //租用container出错
-		return nil, err
-	}
-
-	r := pb.AcquireContainerReply{
-		NodeId:          node.NodeID,
-		NodeAddress:     node.Address,
-		NodeServicePort: node.Port,
-		ContainerId:     container.Id,
-	}
-	return &r, nil
+//存放节点信息
+type Node struct {
+	lock       sync.RWMutex
+	NodeID     string                //节点id
+	Address    string                //节点地址
+	Port       int64                 //节点端口
+	MaxMem     int64                 //最大内存
+	UsedMem    int64                 //使用内存
+	UserCount  int                   //使用者数量
+	Client     pb.NodeServiceClient  //节点连接
+	Containers map[string]*Container //存放所有的Container
 }
 
-//归还
-func ReturnContainer(req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
-	//req{RequestId,ContainerId,DurationInNanos,MaxMemoryUsageInBytes,ErrorCode,ErrorMessage}
-	ReturnNC(req.RequestId)
-	return &pb.ReturnContainerReply{}, nil
+type NC struct {
+	Node      *Node
+	Container *Container
 }
 
-var NodeLock sync.Mutex
+//用于存放所有node
+var nodes = make([]*Node, 0, 100)
+var NodesLock sync.RWMutex
 
-//保证所有的node申请是排队完成的，
-func GetNode(accountId string, funcName string, reqMem int64) (*Node, error) {
-	NodeLock.Lock()
-	defer NodeLock.Unlock()
+//请求表，用于存放所有的请求
+var RequestMap = make(map[string]*NC)
+var RequestMapLock sync.Mutex
 
-	//在申请之前先查询一次，是否前面已经申请了，保证一次只申请一个
-	node, _ := QueryNodeAndContainer(funcName, reqMem)
-	if node != nil {
-		return node, nil
-	}
-
-	//预约一个node
-	reply, err := client.ReserveNode("", accountId)
-	if err != nil {
-		return nil, err
-	}
-
-	//ReservedTimeTimestampMs ReleasedTimeTimestampMs
-	node = NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, reply.Node.MemoryInBytes)
-	nodeClient, err := client.ConnectNodeService(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort)
-	if err != nil {
-		//TODO 由于连接错误，需要释放Node
-		return nil, err
-	}
-
-	//创建成功node并且连接成功，进行节点添加
-	node.Client = nodeClient
-	AddNode(node)
-	return node, nil
+//实例化一个node
+func NewNode(nodeId string, address string, port int64, maxMem int64) *Node {
+	node := &Node{NodeID: nodeId, Address: address, Port: port, MaxMem: maxMem}
+	node.Containers = make(map[string]*Container)
+	node.MaxMem -= 128 * 1024 * 1024 //每个节点预留512M的空间，不使用完
+	return node
 }
-*/
+
+//添加一个Node
+func AddNode(node *Node) {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	nodes = append(nodes, node)
+}
+
+func GetNode(i int) *Node {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	return nodes[i]
+}
+
+func NodesSize() int {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	return len(nodes)
+}
+
+func PutRequestNC(requestId string, nc *NC) {
+	RequestMapLock.Lock()
+	defer RequestMapLock.Unlock()
+	RequestMap[requestId] = nc
+}
+
+func RemoveRequestNC(requestId string) {
+	RequestMapLock.Lock()
+	defer RequestMapLock.Unlock()
+	delete(RequestMap, requestId)
+}
+
+func GetRequestNC(requestId string) *NC {
+	RequestMapLock.Lock()
+	defer RequestMapLock.Unlock()
+	nc := RequestMap[requestId]
+	return nc
+}

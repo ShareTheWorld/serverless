@@ -1,4 +1,4 @@
-package core
+package handler
 
 import (
 	pb "com/aliyun/serverless/scheduler/proto"

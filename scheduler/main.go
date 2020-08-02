@@ -2,7 +2,7 @@ package main
 
 import (
 	"com/aliyun/serverless/scheduler/client"
-	"com/aliyun/serverless/scheduler/core"
+	"com/aliyun/serverless/scheduler/handler"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"com/aliyun/serverless/scheduler/server"
 	"com/aliyun/serverless/scheduler/utils/groble"
@@ -16,8 +16,10 @@ import (
 
 func main() {
 	InitResourceMainEndpoint()
-	go core.AcquireContainerHandler() //处理请求容器
-	go core.ReturnContainerHandler()  //处理归还容器
+	go handler.AcquireContainerHandler() //启动容器请求处理器
+	go handler.ReturnContainerHandler()  //启动容器归还处理器
+	go handler.NodeHandler()             //启动Node管理处理器
+	go handler.ContainerHandler()        //启动容器处理器
 	client.ConnectResourceManagerService(groble.ResourceManagerEndpoint)
 	StartSchedulerService()
 }

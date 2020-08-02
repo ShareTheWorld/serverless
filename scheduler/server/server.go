@@ -1,7 +1,7 @@
 package server
 
 import (
-	"com/aliyun/serverless/scheduler/core"
+	"com/aliyun/serverless/scheduler/handler"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"context"
 	"google.golang.org/grpc/codes"
@@ -23,7 +23,7 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return nil, status.Errorf(codes.InvalidArgument, "function config cannot be nil")
 	}
 	var ch = make(chan *pb.AcquireContainerReply)
-	core.AddAcquireContainerToQueue(req, ch)
+	handler.AddAcquireContainerToQueue(req, ch)
 	res := <-ch
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
@@ -32,6 +32,6 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 }
 
 func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
-	core.AddReturnContainerToQueue(req)
+	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil
 }

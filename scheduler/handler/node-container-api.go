@@ -1,6 +1,9 @@
-package core
+package handler
 
-import pb "com/aliyun/serverless/scheduler/proto"
+import (
+	"com/aliyun/serverless/scheduler/core"
+	pb "com/aliyun/serverless/scheduler/proto"
+)
 
 /*
 	提供对外的接口
@@ -14,11 +17,10 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	funcName := req.FunctionName
 	reqMem := req.FunctionConfig.MemoryInBytes
 
-	var node *Node
-	var container *Container
-	//for _, n := range Nodes {
-	for i := 0; i < len(Nodes); i++ {
-		n := Nodes[i]
+	var node *core.Node
+	var container *core.Container
+	for i := 0; i < core.NodesSize(); i++ {
+		n := core.GetNode(i)
 		c := n.Containers[funcName]
 		if c == nil { //判断是否存在想要的方法
 			continue
@@ -40,7 +42,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	node.UserCount++
 
 	//在requestMap上做好登记
-	RequestMap[requestId] = &NC{Node: node, Container: container}
+	core.PutRequestNC(requestId, &core.NC{Node: node, Container: container})
 
 	//TODO 将方法的请求时间记录下来
 
@@ -55,7 +57,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 //归还container,只需要更具请求者的id归还就行
 func Return(req *pb.ReturnContainerRequest) {
 	requestId := req.RequestId
-	nc := RequestMap[requestId]
+	nc := core.GetRequestNC(requestId)
 	if nc == nil {
 		return
 	}
@@ -65,5 +67,5 @@ func Return(req *pb.ReturnContainerRequest) {
 
 	node.UsedMem -= container.UsedMem
 	node.UserCount--
-	delete(RequestMap, requestId)
+	core.RemoveRequestNC(requestId)
 }

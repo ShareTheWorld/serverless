@@ -1,0 +1,114 @@
+package handler
+
+import (
+	"com/aliyun/serverless/scheduler/client"
+	"com/aliyun/serverless/scheduler/core"
+	"fmt"
+	"time"
+)
+
+/*
+	node-manager负责探测node资源的使用率，
+	当使用率高的时候就去申请资源，
+	当使用率低的时候就释放资源
+*/
+const ReservePress = 0.7             //申请压力
+const ReleasePress = 0.4             //释放压力
+const AccountId = "1317891723692367" //TODO 线上可能会变化
+const MinNodeCount = 2               //最少节点数量
+const MaxNodeCount = 20              //最大节点数量
+
+//MinNodeCount=a,MaxNodeCount=b
+//(0,a)申请资源
+//[a,a]不管
+//(a,b)申请或者释放资源
+//[b,)只能释放资源
+
+func NodeHandler() {
+	for {
+		size := core.NodesSize()
+		//(0,a)申请资源
+		if size < MinNodeCount {
+			node := ReserveOneNode()
+			core.AddNode(node)
+			fmt.Println(node)
+			continue
+		}
+		//[a,a]不管
+		if size == MinNodeCount { //刚好是最小情况，什么也不做
+			time.Sleep(50)
+			continue
+		}
+
+		press := calcNodePress() //计算节点压力
+		//(a,b)申请或者释放资源
+		if size > MinNodeCount && size < MaxNodeCount {
+			if press > ReservePress { //当压力达到0.7就申请一个node
+				node := ReserveOneNode()
+				core.AddNode(node)
+				fmt.Println(node)
+			} else if press < ReleasePress { //当压力小于0.4就释放一个
+				ReleaseOneNode()
+			} else {
+				time.Sleep(50)
+			}
+			continue
+		}
+
+		if size >= MaxNodeCount {
+			if press < ReleasePress {
+				ReleaseOneNode()
+			} else {
+				time.Sleep(50)
+			}
+			continue
+		}
+	}
+}
+
+//计算节点的压力
+func calcNodePress() float64 {
+	var totalMem int64 = 0
+	var usedMem int64 = 0
+
+	for i := 0; i < core.NodesSize(); i++ {
+		node := core.GetNode(i)
+		totalMem += node.MaxMem
+		usedMem += node.UsedMem
+	}
+
+	if totalMem == 0 {
+		return 1
+	}
+	press := float64(usedMem) / float64(totalMem)
+	return press
+}
+
+//这个方法需要保证一定要申请一个Node
+func ReserveOneNode() *core.Node {
+	for {
+		//预约一个node
+		reply, err := client.ReserveNode("", AccountId)
+		if err != nil || reply == nil || reply.Node == nil {
+			fmt.Println("error ", err)
+			time.Sleep(time.Second * 1) //一秒过后再重试
+			continue
+		}
+
+		//ReservedTimeTimestampMs ReleasedTimeTimestampMs
+		node := core.NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, reply.Node.MemoryInBytes)
+		nodeClient, err := client.ConnectNodeService(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort)
+		if err != nil {
+			fmt.Println("error ", err)
+			continue
+		}
+
+		//创建成功node并且连接成功，进行节点添加
+		node.Client = nodeClient
+		return node
+	}
+}
+
+func ReleaseOneNode() {
+
+}
