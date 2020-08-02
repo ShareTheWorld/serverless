@@ -19,7 +19,8 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 
 	var node *core.Node
 	var container *core.Container
-	for i := 0; i < core.NodeCount(); i++ {
+	//内存使用越小的放在越后面，优先选择内存最小的
+	for i := core.NodeCount() - 1; i >= 0; i-- {
 		n := core.GetNode(i)
 		c := n.GetContainer(funcName)
 		if c == nil { //判断是否存在想要的方法
@@ -64,7 +65,7 @@ func Return(req *pb.ReturnContainerRequest) {
 	node := nc.Node
 	container := nc.Container
 
-	node.RequireMem(container.GetUsedMem())
+	node.Return(container.GetUsedMem())
 
 	core.RemoveRequestNC(requestId)
 }

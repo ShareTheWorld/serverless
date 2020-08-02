@@ -23,10 +23,10 @@ const (
 
 func main() {
 	Init()
-	//test()
+	test()
 	//testTimer()
 
-	test1()
+	//test1()
 }
 
 func Init() {
@@ -45,11 +45,11 @@ func test1() {
 	req := pb.AcquireContainerRequest{
 		RequestId:    id,
 		AccountId:    "1317891723692367",
-		FunctionName: "pre_function_15",
+		FunctionName: "pre_function_14",
 		FunctionConfig: &pb.FunctionConfig{
 			TimeoutInMs:   60000,
 			MemoryInBytes: 536870912,
-			Handler:       "pre_handler_15",
+			Handler:       "pre_handler_14",
 		},
 	}
 	reply, _ := client.AcquireContainer(context.Background(), &req)
@@ -149,7 +149,7 @@ func test() {
 			}
 		}
 		bool := strings.Contains(arr[1], "function_config")
-		go func() {
+		//go func() {
 			if bool {
 				req1 := new(pb.AcquireContainerRequest)
 				req1.FunctionConfig = new(pb.FunctionConfig)
@@ -172,7 +172,7 @@ func test() {
 					fmt.Println(err)
 				}
 			}
-		}()
+		//}()
 
 	}
 	fmt.Println(time.Now())

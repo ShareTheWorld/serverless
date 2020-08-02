@@ -24,7 +24,7 @@ func ContainerHandler() {
 		node := core.GetMemMaxNode()
 		container := node.GetContainer(req.FunctionName)
 		if container != nil {
-			return
+			continue
 		}
 		container = CreateContainer(node, req)
 		node.AddContainer(container)

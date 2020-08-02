@@ -22,13 +22,11 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 	if req.FunctionConfig == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "function config cannot be nil")
 	}
-	//container handler负责创建container
-	handler.AddAcquireContainerToContainerHandler(req)
 
 	//acquire handler负责取走container
 	var ch = make(chan *pb.AcquireContainerReply)
 	handler.AddAcquireContainerToAcquireHandler(req, ch)
-	
+
 	res := <-ch
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil

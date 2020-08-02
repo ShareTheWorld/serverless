@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 	"time"
@@ -34,13 +35,18 @@ func AcquireContainerHandler() {
 	fmt.Println("start handle acquire container")
 	for {
 		pkg := <-acquireQueue
+
 		req := pkg.req
 		ch := pkg.ch
-		
+
+		//container handler负责创建container
+		AddAcquireContainerToContainerHandler(req)
+
 		res := Acquire(req)
 		if res != nil {
 			ch <- res
 			RepeatAcquireFailCount = 0
+			core.PrintNodes("acquire")
 			continue
 		}
 

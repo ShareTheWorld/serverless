@@ -33,7 +33,7 @@ func (node *Node) Acquire(reqMem int64) {
 	node.UsedMem += reqMem
 	node.UserCount++
 	//对node进行排序
-	InsertSort(len(nodes)-1, false)
+	InsertSort(len(nodes)-1, true)
 }
 
 //归还资源
@@ -43,7 +43,7 @@ func (node *Node) Return(reqMem int64) {
 	node.UsedMem -= reqMem
 	node.UserCount--
 	//对node进行排序
-	InsertSort(len(nodes)-1, true)
+	InsertSort(len(nodes)-1, false)
 }
 
 //判断内存是否足够

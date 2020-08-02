@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -9,7 +10,7 @@ type NC struct {
 	Container *Container
 }
 
-//用于存放所有node
+//用于存放所有node,使用内存越小的放在越后面
 var nodes = make([]*Node, 0, 100)
 var NodesLock sync.RWMutex
 
@@ -18,29 +19,27 @@ var RequestMap = make(map[string]*NC)
 var RequestMapLock sync.Mutex
 
 //对nodes进行插入排序
-func InsertSort(p int, inc bool) {
+func InsertSort(p int, forward bool) {
 	if p < 0 || p > len(nodes) {
 		return
 	}
-	if inc { //增序
-		for ; p < len(nodes)-1; p++ {
-			//如果是正确顺序就直接返回
-			if nodes[p].UsedMem > nodes[p+1].UsedMem {
-				nodes[p], nodes[p+1] = nodes[p+1], nodes[p]
-			} else {
-				return
-			}
-			//交换位置
-		}
-	} else { //逆序
+	if forward { //向前插入，说明增加了使用内存
 		for ; p > 0; p-- {
 			//如果是正确顺序就直接返回
-			if nodes[p].UsedMem < nodes[p-1].UsedMem {
+			if nodes[p-1].UsedMem < nodes[p].UsedMem {
 				nodes[p], nodes[p-1] = nodes[p-1], nodes[p]
 			} else {
 				return
 			}
-			//交换位置
+		}
+	} else { //向后插入，说明减少了使用内存
+		for ; p < len(nodes)-1; p++ {
+			//如果是正确顺序就直接返回
+			if nodes[p+1].UsedMem > nodes[p].UsedMem {
+				nodes[p], nodes[p+1] = nodes[p+1], nodes[p]
+			} else {
+				return
+			}
 		}
 	}
 
@@ -52,7 +51,7 @@ func AddNode(node *Node) {
 	defer NodesLock.Unlock()
 	nodes = append(nodes, node)
 	//对node进行排序
-	InsertSort(len(nodes)-1, false)
+	InsertSort(len(nodes)-1, true)
 }
 
 //获取第i个位置的节点
@@ -97,4 +96,16 @@ func GetRequestNC(requestId string) *NC {
 	defer RequestMapLock.Unlock()
 	nc := RequestMap[requestId]
 	return nc
+}
+
+func PrintNodes(tag string) {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	fmt.Printf("****************************%v*******************************\n", tag)
+	for i := 0; i < len(nodes); i++ {
+		node := nodes[i]
+		fmt.Printf("%v,%v,%v,%v\n", i, node.NodeID, node.UsedMem/1024/1024, node.UserCount)
+	}
+	fmt.Printf("**************************************************************\n\n")
+
 }

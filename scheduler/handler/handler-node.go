@@ -21,27 +21,34 @@ const SleepTime = time.Millisecond * 100 //当没有事干的时候睡眠多少�
 
 //MinNodeCount=a,MaxNodeCount=b
 //(0,a)申请资源
-//[a,a]不管
+//[a,a]只能申请资源
 //(a,b)申请或者释放资源
 //[b,)只能释放资源
 
 func NodeHandler() {
 	for {
 		size := core.NodeCount()
-		//(0,a)申请资源
+		//(0,a)不满足最低要求，无条件直接申请资源
 		if size < MinNodeCount {
 			node := ReserveOneNode()
 			core.AddNode(node)
 			fmt.Println(node)
 			continue
 		}
-		//[a,a]不管
+		press := calcNodePress() //计算节点压力
+
+		//[a,a]只能申请资源
 		if size == MinNodeCount { //刚好是最小情况，什么也不做
-			time.Sleep(SleepTime)
+			if press > ReservePress {
+				node := ReserveOneNode()
+				core.AddNode(node)
+				fmt.Println(node)
+			} else {
+				time.Sleep(SleepTime)
+			}
 			continue
 		}
 
-		press := calcNodePress() //计算节点压力
 		//(a,b)申请或者释放资源
 		if size > MinNodeCount && size < MaxNodeCount {
 			if press > ReservePress { //当压力达到0.7就申请一个node
