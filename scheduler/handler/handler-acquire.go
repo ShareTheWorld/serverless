@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 	"time"
@@ -46,7 +45,7 @@ func AcquireContainerHandler() {
 		if res != nil {
 			ch <- res
 			RepeatAcquireFailCount = 0
-			core.PrintNodes("acquire")
+			//core.PrintNodes("acquire")
 			continue
 		}
 
@@ -57,7 +56,7 @@ func AcquireContainerHandler() {
 		//当失败次数大于队列的长度时，就暂停一定时间，避免空耗cpu
 		if RepeatAcquireFailCount > len(acquireQueue) { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
 			RepeatAcquireFailCount = 0
-			time.Sleep(time.Millisecond * 1000)
+			time.Sleep(time.Millisecond * 1)
 		}
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,10 +24,89 @@ const (
 
 func main() {
 	Init()
-	test()
+	//test()
 	//testTimer()
 
 	//test1()
+
+	//function_1  	    2.5		5		2610	21.75
+	//function_2		5		20		4284
+	//function_2 		4		8		1440
+	//function_4 		2.5		18		4750
+	//function_5 		3		7		1130
+	//function_6 		2.5		5		1920
+	//function_7		3 		3		653
+	//function_8		8		7		822
+	//function_9 		49		10		240
+	//function_10		50		20		460
+	//function_11		270		10		40
+	//function_12		290		10		40
+	//function_13		50		5		1100
+	//function_14		2.5		5		1216
+	//function_15		360		10		40
+	//function_16
+
+	go call("func_name_001", 128*1024*1024, 1000, 5, 2500)
+	go call("func_name_002", 128*1024*1024, 1000, 20, 5000)
+	go call("func_name_003", 256*1024*1024, 1000, 10, 4000)
+	go call("func_name_004", 256*1024*1024, 1000, 20, 2500)
+	go call("func_name_005", 128*1024*1024, 1000, 10, 3000)
+	go call("func_name_006", 256*1024*1024, 1000, 5, 2500)
+	go call("func_name_007", 512*1024*1024, 1000, 5, 3000)
+	go call("func_name_008", 512*1024*1024, 1000, 10, 8000)
+	go call("func_name_009", 256*1024*1024, 1000, 10, 49000)
+	go call("func_name_010", 256*1024*1024, 1000, 20, 50000)
+	go call("func_name_011", 512*1024*1024, 1000, 10, 270000)
+	go call("func_name_012", 256*1024*1024, 1000, 10, 290000)
+	go call("func_name_013", 256*1024*1024, 1000, 5, 50000)
+	go call("func_name_014", 256*1024*1024, 1000, 5, 2500)
+	go call("func_name_015", 512*1024*1024, 1000, 10, 360000)
+	//go call("func_name_016", 512*1024*1024, 1000, 10, 4000)
+	time.Sleep(time.Second * 100000)
+}
+func call(funcName string, reqMem int64, execTime int64, concurrentCount int, intervalTime int64) {
+	for {
+		var group sync.WaitGroup
+		for i := 0; i < concurrentCount; i++ {
+			group.Add(1)
+			go callOneFunction(funcName, reqMem, execTime, &group)
+		}
+
+		group.Wait()
+		pauseTime := 1000 * 1000 * intervalTime
+		time.Sleep(time.Duration(pauseTime))
+	}
+}
+
+func callOneFunction(funcName string, reqMem int64, execTime int64, group *sync.WaitGroup) {
+	startTime := time.Now().UnixNano()
+	id := uuid.NewV4().String()
+	req := pb.AcquireContainerRequest{
+		RequestId:    id,
+		AccountId:    "1317891723692367",
+		FunctionName: funcName,
+		FunctionConfig: &pb.FunctionConfig{
+			TimeoutInMs:   60000,
+			MemoryInBytes: reqMem,
+			Handler:       "pre_handler_14",
+		},
+	}
+	client.AcquireContainer(context.Background(), &req)
+
+	//fmt.Println(reply)
+	pauseTime := 1000 * 1000 * execTime
+	time.Sleep(time.Duration(pauseTime))
+
+	req2 := pb.ReturnContainerRequest{
+		RequestId:             id,
+		ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
+		DurationInNanos:       1005291237,
+		MaxMemoryUsageInBytes: 7278592,
+	}
+	client.ReturnContainer(context.Background(), &req2)
+	endTime := time.Now().UnixNano()
+	fmt.Printf("%v\t%v\n", funcName, (endTime-startTime)/1000/1000)
+	group.Done()
 }
 
 func Init() {
@@ -40,68 +120,8 @@ func Init() {
 	client = pb.NewSchedulerClient(conn)
 }
 
-func test1() {
-	id := uuid.NewV4().String()
-	req := pb.AcquireContainerRequest{
-		RequestId:    id,
-		AccountId:    "1317891723692367",
-		FunctionName: "pre_function_14",
-		FunctionConfig: &pb.FunctionConfig{
-			TimeoutInMs:   60000,
-			MemoryInBytes: 536870912,
-			Handler:       "pre_handler_14",
-		},
-	}
-	reply, _ := client.AcquireContainer(context.Background(), &req)
-	fmt.Println(reply)
-	req2 := pb.ReturnContainerRequest{
-		RequestId:             id,
-		ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
-		DurationInNanos:       1005291237,
-		MaxMemoryUsageInBytes: 7278592,
-	}
-	client.ReturnContainer(context.Background(), &req2)
-}
-
-//测试定时函数用例
-func testTimer() {
-	for {
-		time.Sleep(time.Millisecond * 5000)
-		req := pb.AcquireContainerRequest{
-			RequestId:    "03decb9a-5e32-407e-9c8f-2a1390c5feb",
-			AccountId:    "1317891723692367",
-			FunctionName: "pre_function_15",
-			FunctionConfig: &pb.FunctionConfig{
-				TimeoutInMs:   60000,
-				MemoryInBytes: 536870912,
-				Handler:       "pre_handler_15",
-			},
-		}
-		client.AcquireContainer(context.Background(), &req)
-		time.Sleep(time.Millisecond * 500)
-
-		req2 := pb.ReturnContainerRequest{
-			RequestId:             "03decb9a-5e32-407e-9c8f-2a1390c5feb",
-			ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
-			DurationInNanos:       1005291237,
-			MaxMemoryUsageInBytes: 7278592,
-		}
-		client.ReturnContainer(context.Background(), &req2)
-	}
-}
-
-//测试内存用例
-func testMemoryIntensive() {
-
-}
-
-//测试cpu用例
-func testCpuIntensive() {
-
-}
-
 //线上测试用例
-func test() {
+func onlineTest() {
 	// 读取一个文件的内容
 	file, err := os.Open("/Users/fht/Desktop/serverless/api-service-function-call.txt")
 	if err != nil {
@@ -149,7 +169,7 @@ func test() {
 			}
 		}
 		bool := strings.Contains(arr[1], "function_config")
-		//go func() {
+		go func() {
 			if bool {
 				req1 := new(pb.AcquireContainerRequest)
 				req1.FunctionConfig = new(pb.FunctionConfig)
@@ -172,7 +192,7 @@ func test() {
 					fmt.Println(err)
 				}
 			}
-		//}()
+		}()
 
 	}
 	fmt.Println(time.Now())

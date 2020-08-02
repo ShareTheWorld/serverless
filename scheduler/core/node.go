@@ -63,8 +63,8 @@ func (node *Node) GetMem() (int64, int64) {
 
 //得到node内存
 func (node *Node) AddContainer(container *Container) {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	node.Containers[container.FunName] = container
 }
 

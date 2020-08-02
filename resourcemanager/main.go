@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"net"
-	"time"
 )
 
 //type ResourceManagerClient interface {
@@ -21,7 +20,7 @@ var id int
 
 func (s ResourceManagerService) ReserveNode(ctx context.Context, in *pb.ReserveNodeRequest) (*pb.ReserveNodeReply, error) {
 	fmt.Printf("call function: ResourceManager.ReserveNode, %v\n", in)
-	time.Sleep(time.Millisecond * 2000)
+	//time.Sleep(time.Millisecond * 2000)
 	id++
 	//if id%2 == 0 {
 	//	return nil, errors.New("模仿出错")

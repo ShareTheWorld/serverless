@@ -15,7 +15,7 @@ import (
 const ReservePress = 0.7                 //申请压力
 const ReleasePress = 0.4                 //释放压力
 const AccountId = "1317891723692367"     //TODO 线上可能会变化
-const MinNodeCount = 2                   //最少节点数量
+const MinNodeCount = 5                   //最少节点数量
 const MaxNodeCount = 20                  //最大节点数量
 const SleepTime = time.Millisecond * 100 //当没有事干的时候睡眠多少毫秒
 
