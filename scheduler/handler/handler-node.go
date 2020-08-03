@@ -4,7 +4,6 @@ import (
 	"com/aliyun/serverless/scheduler/client"
 	"com/aliyun/serverless/scheduler/core"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -113,12 +112,12 @@ func ReserveOneNode() *core.Node {
 			fmt.Println("error ", err)
 			continue
 		}
-		requestId := uuid.NewV4().String()
-		statsReply := client.GetStats(nodeClient, requestId)
-		totalMem := statsReply.GetNodeStats().TotalMemoryInBytes
-		usedMem := statsReply.GetNodeStats().MemoryUsageInBytes
+		//requestId := uuid.NewV4().String()
+		//statsReply := client.GetStats(nodeClient, requestId)
+		//totalMem := statsReply.GetNodeStats().TotalMemoryInBytes
+		//usedMem := statsReply.GetNodeStats().MemoryUsageInBytes
 		//创建成功node并且连接成功，进行节点添加
-		node := core.NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, totalMem, usedMem, nodeClient)
+		node := core.NewNode(reply.Node.Id, reply.Node.Address, reply.Node.NodeServicePort, reply.Node.MemoryInBytes, 0, nodeClient)
 		et := time.Now().UnixNano()
 		fmt.Printf("---- reserve node, time=%v, node:%v \n", (et-st)/1000000, node)
 		return node

@@ -35,7 +35,7 @@ func ContainerHandler() {
 //
 ////保证创建一个container
 func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Container {
-	core.PrintNodes("create container")
+	core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
 	st := time.Now().UnixNano()
 	for {
 		//创建一个container

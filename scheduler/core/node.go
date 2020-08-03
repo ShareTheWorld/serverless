@@ -22,7 +22,7 @@ type Node struct {
 func NewNode(nodeId string, address string, port int64, maxMem int64, usedMem int64, client pb.NodeServiceClient) *Node {
 	node := &Node{NodeID: nodeId, Address: address, Port: port, MaxMem: maxMem, UsedMem: usedMem, Client: client}
 	node.Containers = make(map[string]*Container)
-	node.MaxMem -= 256 * 1024 * 1024 //每个节点预留512M的空间，不使用完
+	node.MaxMem -= 512 * 1024 * 1024 //每个节点预留512M的空间，不使用完
 	return node
 }
 

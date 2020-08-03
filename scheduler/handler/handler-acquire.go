@@ -38,9 +38,6 @@ func AcquireContainerHandler() {
 		req := pkg.req
 		ch := pkg.ch
 
-		//container handler负责创建container
-		AddAcquireContainerToContainerHandler(req)
-
 		res := Acquire(req)
 		if res != nil {
 			ch <- res
