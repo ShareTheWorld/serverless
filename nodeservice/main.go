@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
 
 type NodeService struct {
@@ -15,7 +16,7 @@ type NodeService struct {
 //预定
 func (s NodeService) Reserve(ctx context.Context, in *pb.ReserveRequest) (*pb.ReserveReply, error) {
 	fmt.Printf("call function: NodeService.Reserve, %v\n", in)
-	//time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 500)
 	res := new(pb.ReserveReply)
 	return res, nil
 }

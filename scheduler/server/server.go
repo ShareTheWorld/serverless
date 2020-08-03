@@ -1,6 +1,7 @@
 package server
 
 import (
+	"com/aliyun/serverless/scheduler/core"
 	"com/aliyun/serverless/scheduler/handler"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"context"
@@ -18,10 +19,11 @@ var logMap = make(map[string]*Log)
 var lock sync.Mutex
 
 type Log struct {
-	st  int64
-	mt  int64
-	fn  string
-	mem int64
+	st     int64
+	mt     int64
+	fn     string
+	mem    int64
+	nodeId string
 }
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
@@ -47,7 +49,7 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 
 	res := <-ch
 	mt := time.Now().UnixNano()
-	log := Log{st, mt, req.FunctionName, req.FunctionConfig.MemoryInBytes / 1048576}
+	log := Log{st, mt, req.FunctionName, req.FunctionConfig.MemoryInBytes / 1048576, res.NodeId}
 	lock.Lock()
 	logMap[req.RequestId] = &log
 	lock.Unlock()
@@ -65,7 +67,8 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 	lock.Lock()
 	log := logMap[id]
 	lock.Unlock()
-	fmt.Printf("FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
+	fmt.Printf("NodeId:%v, FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
+		log.nodeId,
 		log.fn,
 		log.mem,
 		(log.mt-log.st)/1000000,
@@ -73,6 +76,9 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 		(et-log.st)/1000000,
 		req.MaxMemoryUsageInBytes/1048576,
 		req.DurationInNanos/1000000, req.ErrorMessage)
+	if req.ErrorMessage == "" {
+		core.PrintNodes(" error ")
+	}
 	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil
 }
