@@ -23,7 +23,7 @@ func ContainerHandler() {
 	fmt.Println("start handle create container")
 	for {
 		req := <-funcQueue
-		node := core.GetMemMaxNode()
+		node := core.GetMinUseNode()
 		containerCount := node.GetContainerCount()
 		if containerCount >= NodeMaxContainerCount {
 			continue

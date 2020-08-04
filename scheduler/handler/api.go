@@ -1,16 +1,11 @@
 package handler
 
-import (
-	"com/aliyun/serverless/scheduler/core"
-	pb "com/aliyun/serverless/scheduler/proto"
-)
-
 /*
 	提供对外的接口
 	Acquire: 获取想要个的container
 	Return: 归还container
 */
-
+/*
 //检索想要的node和container
 func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	requestId := req.RequestId
@@ -19,6 +14,11 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 
 	var node *core.Node
 	var container *core.Container
+
+	//找一个
+	for i := 0; i < core.NodeCount(); i++ {
+
+	}
 	//内存使用越小的放在越后面，优先选择内存最小的
 	for i := core.NodeCount() - 1; i >= 0; i-- {
 		n := core.GetNode(i)
@@ -69,3 +69,4 @@ func Return(req *pb.ReturnContainerRequest) {
 
 	core.RemoveRequestNC(requestId)
 }
+*/

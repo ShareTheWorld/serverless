@@ -1,6 +1,7 @@
 package core
 
 import (
+	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 	"sync"
 )
@@ -18,64 +19,11 @@ var NodesLock sync.RWMutex
 var RequestMap = make(map[string]*NC)
 var RequestMapLock sync.Mutex
 
-//对nodes进行插入排序
-func InsertSort(p int, forward bool) {
-	var n = len(nodes)
-	if n <= 1 {
-		return
-	}
-	for i := 1; i < n; i++ {
-		//如果后面一个大于前面一个，就往前挪动
-		for j := i; j > 0; j-- {
-			if nodes[j].UsedMem > nodes[j-1].UsedMem {
-				nodes[j], nodes[j-1] = nodes[j-1], nodes[j]
-			} else {
-				break
-			}
-		}
-	}
-
-	//if p < 0 || p > len(nodes) {
-	//	return
-	//}
-	//if forward { //向前插入，说明增加了使用内存
-	//	for ; p > 0; p-- {
-	//		//如果是正确顺序就直接返回
-	//		if nodes[p-1].UsedMem < nodes[p].UsedMem {
-	//			nodes[p], nodes[p-1] = nodes[p-1], nodes[p]
-	//		} else {
-	//			return
-	//		}
-	//	}
-	//} else { //向后插入，说明减少了使用内存
-	//	for ; p < len(nodes)-1; p++ {
-	//		//如果是正确顺序就直接返回
-	//		if nodes[p+1].UsedMem > nodes[p].UsedMem {
-	//			nodes[p], nodes[p+1] = nodes[p+1], nodes[p]
-	//		} else {
-	//			return
-	//		}
-	//	}
-	//}
-	//
-	//fmt.Printf("****************************%v*******************************\n", "test")
-	//for i := 0; i < len(nodes); i++ {
-	//	node := nodes[i]
-	//	fmt.Printf("No:%v, NodeId:%v, Mem:%v/%v, UserCount:%v, containerCount:%v,  %v\n",
-	//		i, node.NodeID, node.UsedMem/1024/1024,
-	//		node.MaxMem/1024/1024, node.UserCount,
-	//		len(node.Containers), node.Containers)
-	//}
-	//fmt.Printf("**************************************************************\n\n")
-}
-
 //添加一个Node
 func AddNode(node *Node) {
 	NodesLock.Lock()
 	defer NodesLock.Unlock()
 	nodes = append(nodes, node)
-	//对node进行排序
-	InsertSort(len(nodes)-1, true)
 }
 
 //获取第i个位置的节点
@@ -85,41 +33,140 @@ func GetNode(i int) *Node {
 	return nodes[i]
 }
 
-//获得内存最大的node
-func GetMemMaxNode() *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
-	node := nodes[len(nodes)-1]
-	return node
-}
-
-//获得nodes的数量
-func NodeCount() int {
+//得到Nodes数量
+func GetNodeCount() int {
 	NodesLock.RLock()
 	defer NodesLock.RUnlock()
 	return len(nodes)
 }
 
-//放入一个请求
-func PutRequestNC(requestId string, nc *NC) {
-	RequestMapLock.Lock()
-	defer RequestMapLock.Unlock()
-	RequestMap[requestId] = nc
+//得到nodes的压力
+func GetNodesPress() float64 {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	var totalUserCount = 0 //总的使用数
+	for _, n := range nodes {
+		totalUserCount += n.UserCount
+	}
+	press := float64(totalUserCount) / float64(10*len(nodes))
+	return press
 }
 
-//移除一个请求
-func RemoveRequestNC(requestId string) {
-	RequestMapLock.Lock()
-	defer RequestMapLock.Unlock()
-	delete(RequestMap, requestId)
+//得到最小使用内存的节点
+func GetMinUsedMemNode() *Node {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	var node = nodes[0]
+	for _, n := range nodes {
+		if n.UsedMem < node.UsedMem {
+			node = n
+		}
+	}
+	return node
 }
 
-//得到请求
-func GetRequestNC(requestId string) *NC {
+//获取一个使用最少的节点
+func GetMinUseNode() *Node {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	var node = nodes[0]
+	for _, n := range nodes {
+		if n.UserCount < node.UserCount {
+			node = n
+		}
+	}
+	return node
+}
+
+//得到一个container最少的节点
+func GetMinContainerNode() *Node {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	var node = nodes[0]
+	for _, n := range nodes {
+		if len(n.Containers) < len(node.Containers) {
+			node = n
+		}
+	}
+	return node
+}
+
+//获取一个node里面的container
+func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
+	requestId := req.RequestId
+	funcName := req.FunctionName
+	reqMem := req.FunctionConfig.MemoryInBytes
+
+	var node *Node
+	var container *Container
+	NodesLock.RLock()
+	//遍历node，找到一个满足要求，且连接数最少的
+	for _, n := range nodes {
+		c := n.GetContainer(funcName)
+		//如果不包含要找的方法
+		if c == nil {
+			continue
+		}
+
+		//如果内存不够
+		if n.MaxMem-n.UsedMem < reqMem {
+			continue
+		}
+
+		//函数存在，且内存足够
+		if node == nil || container == nil {
+			node, container = n, c
+			continue
+		}
+
+		//如果n的使用数 > node的使用数
+		if n.UserCount > node.UserCount {
+			continue
+		}
+
+		//这个连接数是最少的，就替换成当前的这个
+		node, container = n, c
+	}
+	NodesLock.RUnlock()
+
+	if node == nil || container == nil {
+		return nil
+	}
+
+	//修改Node的数据
+	node.Acquire(container)
+
+	//记录请求
 	RequestMapLock.Lock()
-	defer RequestMapLock.Unlock()
+	RequestMap[requestId] = &NC{node, container}
+	RequestMapLock.Unlock()
+
+	return &pb.AcquireContainerReply{
+		NodeId:          node.NodeID,
+		NodeAddress:     node.Address,
+		NodeServicePort: node.Port,
+		ContainerId:     container.Id,
+	}
+}
+
+//归还node中的container
+func Return(req *pb.ReturnContainerRequest) {
+	requestId := req.RequestId
+
+	RequestMapLock.Lock()
 	nc := RequestMap[requestId]
-	return nc
+	delete(RequestMap, requestId)
+	RequestMapLock.Unlock()
+
+	if nc == nil {
+		return
+	}
+
+	node := nc.Node
+	container := nc.Container
+
+	node.Return(container)
+
 }
 
 func PrintNodes(tag string) {

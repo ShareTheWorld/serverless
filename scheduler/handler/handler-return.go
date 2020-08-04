@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 )
@@ -22,7 +23,6 @@ func ReturnContainerHandler() {
 	fmt.Println("start handle return container")
 	for {
 		req := <-returnQueue
-		Return(req)
-		//core.PrintNodes("return")
+		core.Return(req)
 	}
 }

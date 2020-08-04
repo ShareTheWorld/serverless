@@ -24,21 +24,3 @@ func (container *Container) SetUsedMem(usedMem int64) {
 	defer container.lock.Unlock()
 	container.UsedMem = usedMem
 }
-
-//不用修改内存返回true
-func (container *Container) UpUsedCount() bool {
-	container.lock.Lock()
-	defer container.lock.Unlock()
-	b := container.UsedCount == 0
-	container.UsedCount++
-	return b
-}
-
-//不用修改内存返回true
-func (container *Container) DownUsedCount() bool {
-	container.lock.Lock()
-	defer container.lock.Unlock()
-	b := container.UsedCount == 1
-	container.UsedCount--
-	return b
-}

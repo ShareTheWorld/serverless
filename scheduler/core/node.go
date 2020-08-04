@@ -26,18 +26,15 @@ func NewNode(nodeId string, address string, port int64, maxMem int64, usedMem in
 	return node
 }
 
-//申请使用Node资源
+////申请使用Node资源
 func (node *Node) Acquire(container *Container) {
 	node.lock.Lock()
 	defer node.lock.Unlock()
 	node.UserCount++
-	if container.UpUsedCount() { //不用修改内存会返回true
-		return
+	if container.UsedCount > 0 { //如果有人正在使用
+		node.UsedMem += container.UsedMem
 	}
-
-	node.UsedMem += container.UsedMem
-	//对node进行排序
-	InsertSort(len(nodes)-1, true)
+	container.UsedCount++
 }
 
 //归还资源
@@ -46,21 +43,21 @@ func (node *Node) Return(container *Container) {
 	defer node.lock.Unlock()
 	node.UserCount--
 
-	if container.DownUsedCount() { //不用修改内存会返回true
+	if container.UsedCount > 0 { //如果还有人在使用
+		node.UsedMem -= container.UsedMem
 		return
 	}
-	node.UsedMem -= container.UsedMem
-	//对node进行排序
-	InsertSort(len(nodes)-1, false)
+	container.UsedCount--
 }
 
-//判断内存是否足够
-func (node *Node) RequireMem(reqMem int64) bool {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
-	b := node.MaxMem-node.UsedMem > reqMem
-	return b
-}
+//
+////判断内存是否足够
+//func (node *Node) RequireMem(reqMem int64) bool {
+//	node.lock.RLock()
+//	defer node.lock.RUnlock()
+//	b := node.MaxMem-node.UsedMem > reqMem
+//	return b
+//}
 
 //得到node内存
 func (node *Node) GetMem() (int64, int64) {
@@ -76,7 +73,6 @@ func (node *Node) AddContainer(container *Container) {
 	node.Containers[container.FunName] = container
 	//创建了一个实例，就减少一点容器所占用的空间
 	node.UsedMem += container.UsedMem //添加一个container就会消耗这么多内存
-	InsertSort(0, true)
 }
 
 //获得Container

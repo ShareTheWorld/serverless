@@ -61,7 +61,7 @@ func main() {
 	go call("func_name_013", 256*1024*1024, 1615, 5, 50000)
 	go call("func_name_014", 256*1024*1024, 173, 5, 2500)
 	go call("func_name_015", 512*1024*1024, 1123, 10, 360000)
-	//go call("func_name_016", 512*1024*1024, 1000, 10, 4000)
+	go call("func_name_016", 512*1024*1024, 1000, 10, 4000)
 	time.Sleep(time.Second * 100000)
 }
 func call(funcName string, reqMem int64, execTime int64, concurrentCount int, intervalTime int64) {
