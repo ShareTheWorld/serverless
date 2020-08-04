@@ -13,6 +13,7 @@ import (
 	处理container的加载
 */
 var funcQueue = make(chan *pb.AcquireContainerRequest, 10000)
+var NodeMaxContainerCount = 7 //node加载container最大数量
 
 func AddAcquireContainerToContainerHandler(req *pb.AcquireContainerRequest) {
 	funcQueue <- req
@@ -23,6 +24,10 @@ func ContainerHandler() {
 	for {
 		req := <-funcQueue
 		node := core.GetMemMaxNode()
+		containerCount := node.GetContainerCount()
+		if containerCount >= NodeMaxContainerCount {
+			continue
+		}
 		container := node.GetContainer(req.FunctionName)
 		if container != nil {
 			continue

@@ -16,7 +16,6 @@ type NodeService struct {
 //预定
 func (s NodeService) Reserve(ctx context.Context, in *pb.ReserveRequest) (*pb.ReserveReply, error) {
 	fmt.Printf("call function: NodeService.Reserve, %v\n", in)
-	time.Sleep(time.Millisecond * 500)
 	res := new(pb.ReserveReply)
 	return res, nil
 }
@@ -24,6 +23,7 @@ func (s NodeService) Reserve(ctx context.Context, in *pb.ReserveRequest) (*pb.Re
 //创建容器
 func (s NodeService) CreateContainer(ctx context.Context, in *pb.CreateContainerRequest) (*pb.CreateContainerReply, error) {
 	fmt.Printf("call function: NodeService.CreateContainer, %v\n", in)
+	time.Sleep(time.Millisecond * 500)
 	res := new(pb.CreateContainerReply)
 	res.ContainerId = uuid.NewV4().String()
 	return res, nil

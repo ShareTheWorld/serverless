@@ -39,7 +39,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	}
 
 	//对node做相应的操作
-	node.Acquire(reqMem)
+	node.Acquire(container)
 
 	//在requestMap上做好登记
 	core.PutRequestNC(requestId, &core.NC{Node: node, Container: container})
@@ -65,7 +65,7 @@ func Return(req *pb.ReturnContainerRequest) {
 	node := nc.Node
 	container := nc.Container
 
-	node.Return(container.GetUsedMem())
+	node.Return(container)
 
 	core.RemoveRequestNC(requestId)
 }

@@ -76,7 +76,7 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 		(et-log.st)/1000000,
 		req.MaxMemoryUsageInBytes/1048576,
 		req.DurationInNanos/1000000, req.ErrorMessage)
-	if req.ErrorMessage == "" {
+	if req.ErrorMessage != "" {
 		core.PrintNodes(" error ")
 	}
 	handler.AddReturnContainerToQueue(req)

@@ -100,7 +100,7 @@ func callOneFunction(funcName string, reqMem int64, execTime int64, group *sync.
 	req2 := pb.ReturnContainerRequest{
 		RequestId:             id,
 		ContainerId:           "3f08d03bba4217a96abce7dc72131035e8d24730862a7",
-		DurationInNanos:       1005291237,
+		DurationInNanos:       pauseTime,
 		MaxMemoryUsageInBytes: 7278592,
 	}
 	client.ReturnContainer(context.Background(), &req2)
