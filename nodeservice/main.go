@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -36,9 +37,21 @@ func (s NodeService) RemoveContainer(ctx context.Context, in *pb.RemoveContainer
 	return res, nil
 }
 
+var lock sync.Mutex
+var NodeMemMap = make(map[string]int64)
+
 //调用函数
-func (s NodeService) InvokeFunction(in *pb.InvokeFunctionRequest, out pb.NodeService_InvokeFunctionServer) error {
-	fmt.Printf("call function: NodeService.InvokeFunction, %v\n", in)
+func (s NodeService) InvokeFunction(req *pb.InvokeFunctionRequest, res pb.NodeService_InvokeFunctionServer) error {
+	fmt.Printf("call function: NodeService.InvokeFunction, %v\n", req)
+	lock.Lock()
+	NodeMemMap[req.RequestId] += req.FunctionMeta.MemoryInBytes
+	lock.Unlock()
+
+	time.Sleep(100)
+
+	lock.Lock()
+	NodeMemMap[req.RequestId] -= req.FunctionMeta.MemoryInBytes
+	lock.Unlock()
 	return nil
 }
 

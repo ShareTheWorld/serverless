@@ -24,16 +24,26 @@ func ContainerHandler() {
 	for {
 		req := <-funcQueue
 		node := core.GetMinUseNode()
-		containerCount := node.GetContainerCount()
+		containerCount := core.GetContainerCount(node)
 		if containerCount >= NodeMaxContainerCount {
 			continue
 		}
-		container := node.GetContainer(req.FunctionName)
+		container := core.GetContainer(node, req.FunctionName)
 		if container != nil {
 			continue
 		}
+
+		//等待有足够的内存了就去创建容器
+		for {
+			b := core.RequireMem(node, req.FunctionConfig.MemoryInBytes)
+			if b {
+				break
+			}
+			time.Sleep(50)
+		}
+
 		container = CreateContainer(node, req)
-		node.AddContainer(container)
+		core.AddContainer(node, container)
 	}
 }
 

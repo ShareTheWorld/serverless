@@ -13,11 +13,12 @@ type NC struct {
 
 //用于存放所有node,使用内存越小的放在越后面
 var nodes = make([]*Node, 0, 100)
-var NodesLock sync.RWMutex
+var NodesLock sync.Mutex
 
 //请求表，用于存放所有的请求
 var RequestMap = make(map[string]*NC)
-var RequestMapLock sync.Mutex
+
+//var RequestMapLock sync.Mutex
 
 //添加一个Node
 func AddNode(node *Node) {
@@ -28,22 +29,22 @@ func AddNode(node *Node) {
 
 //获取第i个位置的节点
 func GetNode(i int) *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	return nodes[i]
 }
 
 //得到Nodes数量
 func GetNodeCount() int {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	return len(nodes)
 }
 
 //得到nodes的压力
 func GetNodesPress() float64 {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var totalUserCount = 0 //总的使用数
 	for _, n := range nodes {
 		totalUserCount += n.UserCount
@@ -54,8 +55,8 @@ func GetNodesPress() float64 {
 
 //得到最小使用内存的节点
 func GetMinUsedMemNode() *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var node = nodes[0]
 	for _, n := range nodes {
 		if n.UsedMem < node.UsedMem {
@@ -67,8 +68,8 @@ func GetMinUsedMemNode() *Node {
 
 //获取一个使用最少的节点
 func GetMinUseNode() *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var node = nodes[0]
 	for _, n := range nodes {
 		if n.UserCount < node.UserCount {
@@ -80,8 +81,8 @@ func GetMinUseNode() *Node {
 
 //得到一个container最少的节点
 func GetMinContainerNode() *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var node = nodes[0]
 	for _, n := range nodes {
 		if len(n.Containers) < len(node.Containers) {
@@ -93,16 +94,19 @@ func GetMinContainerNode() *Node {
 
 //获取一个node里面的container
 func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+
 	requestId := req.RequestId
 	funcName := req.FunctionName
 	reqMem := req.FunctionConfig.MemoryInBytes
 
 	var node *Node
 	var container *Container
-	NodesLock.RLock()
+
 	//遍历node，找到一个满足要求，且连接数最少的
 	for _, n := range nodes {
-		c := n.GetContainer(funcName)
+		c := n.Containers[funcName]
 		//如果不包含要找的方法
 		if c == nil {
 			continue
@@ -127,7 +131,6 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 		//这个连接数是最少的，就替换成当前的这个
 		node, container = n, c
 	}
-	NodesLock.RUnlock()
 
 	if node == nil || container == nil {
 		return nil
@@ -137,9 +140,7 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	node.Acquire(container)
 
 	//记录请求
-	RequestMapLock.Lock()
 	RequestMap[requestId] = &NC{node, container}
-	RequestMapLock.Unlock()
 
 	return &pb.AcquireContainerReply{
 		NodeId:          node.NodeID,
@@ -149,14 +150,26 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	}
 }
 
+//减少node容量
+func RequireMem(node *Node, reqMem int64) bool {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	//如果内存不够
+	if node.MaxMem-node.UsedMem < reqMem {
+		return false
+	}
+	node.UsedMem += reqMem
+	return true
+}
+
 //归还node中的container
 func Return(req *pb.ReturnContainerRequest) {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	requestId := req.RequestId
 
-	RequestMapLock.Lock()
 	nc := RequestMap[requestId]
 	delete(RequestMap, requestId)
-	RequestMapLock.Unlock()
 
 	if nc == nil {
 		return
@@ -169,9 +182,32 @@ func Return(req *pb.ReturnContainerRequest) {
 
 }
 
+//得到node内存
+func AddContainer(node *Node, container *Container) {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	node.Containers[container.FunName] = container
+	//创建了一个实例，就减少一点容器所占用的空间，申请之前就已经减少了，所以这里不再减少
+}
+
+//获得Container
+func GetContainer(node *Node, funcName string) *Container {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	container := node.Containers[funcName]
+	return container
+}
+
+//得到node中container的数量
+func GetContainerCount(node *Node) int {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	return len(node.Containers)
+}
+
 func PrintNodes(tag string) {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	fmt.Printf("****************************%v*******************************\n", tag)
 	for i := 0; i < len(nodes); i++ {
 		node := nodes[i]
