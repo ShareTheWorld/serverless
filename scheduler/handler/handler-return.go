@@ -11,18 +11,19 @@ import (
 	HandleReturnContainer方法负责处理所有的归还任务
 */
 
-var returnQueue = make(chan *pb.ReturnContainerRequest, 100)
+//var returnQueue = make(chan *pb.ReturnContainerRequest, 100)
 
-//添加归还容器的请求到队列中
+//添加归还容器的请求到队列中,直接进行归还
 func AddReturnContainerToQueue(req *pb.ReturnContainerRequest) {
-	returnQueue <- req
+	//returnQueue <- req
+	core.Return(req)
 }
 
 //容器归还处理者
 func ReturnContainerHandler() {
 	fmt.Println("start handle return container")
-	for {
-		req := <-returnQueue
-		core.Return(req)
-	}
+	//for {
+	//	req := <-returnQueue
+	//	core.Return(req)
+	//}
 }

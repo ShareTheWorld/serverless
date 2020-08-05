@@ -44,7 +44,6 @@ func AcquireContainerHandler() {
 		if res != nil {
 			ch <- res
 			RepeatAcquireFailCount = 0
-			//core.PrintNodes("acquire")
 			continue
 		}
 

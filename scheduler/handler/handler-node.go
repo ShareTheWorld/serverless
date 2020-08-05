@@ -12,10 +12,10 @@ import (
 	当使用率高的时候就去申请资源，
 	当使用率低的时候就释放资源
 */
-const ReservePress = 0.7                 //申请压力
-const ReleasePress = 0.4                 //释放压力
+const ReservePress = 0.5                 //申请压力
+const ReleasePress = 0.3                 //释放压力
 const AccountId = "1317891723692367"     //TODO 线上可能会变化
-const MinNodeCount = 5                   //最少节点数量
+const MinNodeCount = 10                  //最少节点数量
 const MaxNodeCount = 20                  //最大节点数量
 const SleepTime = time.Millisecond * 100 //当没有事干的时候睡眠多少毫秒
 
@@ -32,13 +32,12 @@ func NodeHandler() {
 		if size < MinNodeCount {
 			node := ReserveOneNode()
 			core.AddNode(node)
-			fmt.Println(node)
 			continue
 		}
-		press := core.GetNodesPress() //计算节点压力
+		press := core.CalcNodesPress() //计算节点压力
 
 		//[a,a]只能申请资源
-		if size == MinNodeCount { //刚好是最小情况，什么也不做
+		if size == MinNodeCount {
 			if press > ReservePress {
 				node := ReserveOneNode()
 				core.AddNode(node)
@@ -74,7 +73,7 @@ func NodeHandler() {
 	}
 }
 
-//这个方法需要保证一定要申请一个Node
+//这个方法需要保证一定要申请一个Node,TODO 需要为节点实例话所已知的函数
 func ReserveOneNode() *core.Node {
 	core.PrintNodes("reserve node")
 	st := time.Now().UnixNano()

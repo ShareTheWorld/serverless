@@ -12,8 +12,9 @@ import (
 /*
 	处理container的加载
 */
+var FuncNameSet = make(map[string]bool) // New empty set
 var funcQueue = make(chan *pb.AcquireContainerRequest, 10000)
-var NodeMaxContainerCount = 7 //node加载container最大数量
+var NodeMaxContainerCount = 15 //node加载container最大数量
 
 func AddAcquireContainerToContainerHandler(req *pb.AcquireContainerRequest) {
 	funcQueue <- req
@@ -23,34 +24,35 @@ func ContainerHandler() {
 	fmt.Println("start handle create container")
 	for {
 		req := <-funcQueue
-		node := core.GetMinUseNode()
-		containerCount := core.GetContainerCount(node)
+		funcName := req.FunctionName
+
+		//将方法名字放入到set中
+		FuncNameSet[funcName] = true
+
+		//获取容器实例话最小的少的节点
+		node := core.GetMinContainerNode()
+
+		containerCount := node.GetContainerCount()
 		if containerCount >= NodeMaxContainerCount {
 			continue
 		}
-		container := core.GetContainer(node, req.FunctionName)
+
+		//如果这个node中有这个container就不创建了
+		container := node.GetContainer(req.FunctionName)
 		if container != nil {
 			continue
 		}
 
 		//等待有足够的内存了就去创建容器
-		for {
-			b := core.RequireMem(node, req.FunctionConfig.MemoryInBytes)
-			if b {
-				break
-			}
-			time.Sleep(50)
-		}
-
 		container = CreateContainer(node, req)
-		core.AddContainer(node, container)
+		node.AddContainer(container)
+		core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
 	}
 }
 
 //
 ////保证创建一个container
 func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Container {
-	core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
 	st := time.Now().UnixNano()
 	for {
 		//创建一个container
@@ -65,13 +67,14 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 		)
 
 		if err != nil {
+			fmt.Printf("FuncName:%v, Mem:%v, error: %v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576, err)
 			return nil
 		}
 
 		//将container添加到node中
 		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId, UsedMem: req.FunctionConfig.MemoryInBytes}
 		et := time.Now().UnixNano()
-		fmt.Printf("---- create container, time=%v, node:%v \n", (et-st)/1000000, node)
+		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, node:%v \n", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576, (et-st)/1000000, node)
 		return container
 	}
 }

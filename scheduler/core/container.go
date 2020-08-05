@@ -1,17 +1,15 @@
 package core
 
-import "sync"
-
 //存放container信息
 type Container struct {
 	FunName   string //函数名字
 	Id        string //容器id
 	UsedCount int    //使用数量
 	UsedMem   int64  //使用内存
-	lock      sync.RWMutex
+	//lock      sync.RWMutex
 }
-
-////得到容器使用内存大小
+//
+//////得到容器使用内存大小
 //func (container *Container) GetUsedMem() int64 {
 //	container.lock.RLock()
 //	defer container.lock.RUnlock()

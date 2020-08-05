@@ -51,20 +51,25 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 	handler.AddAcquireContainerToAcquireHandler(req, ch)
 
 	res := <-ch
+
 	mt := time.Now().UnixNano()
 	log := Log{st, mt, req.FunctionName, req.FunctionConfig.MemoryInBytes / 1048576, res.NodeId}
 	lock.Lock()
 	logMap[req.RequestId] = &log
 	lock.Unlock()
+
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
 	}
+
 	fmt.Printf("Call Acquire Container, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
 		log.nodeId,
 		log.fn,
 		log.mem,
 		(log.mt-log.st)/1000000,
 		req.FunctionConfig.MemoryInBytes/1048576)
+
+
 	return res, nil
 }
 
