@@ -1,7 +1,9 @@
 package core
 
 import (
+	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
+	"math/rand"
 	"sync"
 )
 
@@ -46,6 +48,21 @@ func GetMinContainerNode() *Node {
 		}
 	}
 	return node
+}
+
+//根据请求，返回node
+func GetSuitableNodes(reqMap map[string]*pb.AcquireContainerRequest) map[string]*Node {
+	NodesLock.RLock()
+	defer NodesLock.RUnlock()
+	size := len(nodes)
+	s := rand.Intn(size)
+	resMap := make(map[string]*Node)
+	for k, _ := range reqMap {
+		i := s % size
+		resMap[k] = nodes[i]
+		s++
+	}
+	return resMap
 }
 
 //

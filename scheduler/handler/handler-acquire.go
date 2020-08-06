@@ -4,6 +4,7 @@ import (
 	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type Pkg struct {
 	ch  chan *pb.AcquireContainerReply
 }
 
-var acquireQueue = make(chan Pkg, 10000)
+var acquireQueue = make(chan Pkg, 20000)
 
 //添加请求容器的请求到队列中
 func AddAcquireContainerToAcquireHandler(req *pb.AcquireContainerRequest, ch chan *pb.AcquireContainerReply) {
@@ -29,6 +30,27 @@ func AddAcquireContainerToAcquireHandler(req *pb.AcquireContainerRequest, ch cha
 
 //请求失败次数，如果连续失败超过一定次数，就会等待一定时间再处理
 var RepeatAcquireFailCount = 0
+
+//等待队列，凡事不能立即返回container实例的，就会放到这里面
+var FuncNameMap = make(map[string]*pb.AcquireContainerRequest) // New empty set
+var FuncNameMapLock sync.Mutex
+
+//获取等待资源的请求
+func GetWaitFuncName() map[string]*pb.AcquireContainerRequest {
+	FuncNameMapLock.Lock()
+	defer FuncNameMapLock.Unlock()
+	set := make(map[string]*pb.AcquireContainerRequest)
+	for k, v := range FuncNameMap {
+		set[k] = v
+	}
+	return set
+}
+
+func LoadFinishContainer() {
+	FuncNameMapLock.Lock()
+	defer FuncNameMapLock.Unlock()
+	FuncNameMap = make(map[string]*pb.AcquireContainerRequest)
+}
 
 //容器请求处理者
 func AcquireContainerHandler() {
@@ -40,12 +62,19 @@ func AcquireContainerHandler() {
 		ch := pkg.ch
 
 		res := core.Acquire(req)
-		
+
 		if res != nil {
 			ch <- res
 			RepeatAcquireFailCount = 0
 			continue
 		}
+
+		//放入等待队列
+		FuncNameMapLock.Lock()
+		if FuncNameMap[pkg.req.FunctionName] == nil {
+			FuncNameMap[pkg.req.FunctionName] = pkg.req
+		}
+		FuncNameMapLock.Unlock()
 
 		//如果没有请求到，就将请求放入到队列后面重新排队
 		acquireQueue <- pkg

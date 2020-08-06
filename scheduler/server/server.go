@@ -43,8 +43,8 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return nil, status.Errorf(codes.InvalidArgument, "function config cannot be nil")
 	}
 
-	//container handler负责创建container
-	handler.AddAcquireContainerToContainerHandler(req)
+	////container handler负责创建container
+	//handler.AddAcquireContainerToContainerHandler(req)
 
 	//acquire handler负责取走container
 	var ch = make(chan *pb.AcquireContainerReply)
@@ -62,13 +62,13 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return &pb.AcquireContainerReply{}, nil
 	}
 
-	fmt.Printf("Call Acquire Container, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
+	fmt.Printf("Call Acquire Container, RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
+		req.RequestId,
 		log.nodeId,
 		log.fn,
 		log.mem,
 		(log.mt-log.st)/1000000,
 		req.FunctionConfig.MemoryInBytes/1048576)
-
 
 	return res, nil
 }
@@ -81,7 +81,8 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 	lock.Lock()
 	log := logMap[id]
 	lock.Unlock()
-	fmt.Printf("NodeId:%v, FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
+	fmt.Printf("RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
+		req.RequestId,
 		log.nodeId,
 		log.fn,
 		log.mem,

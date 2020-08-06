@@ -78,10 +78,9 @@ func Return(req *pb.ReturnContainerRequest) {
 	requestId := req.RequestId
 
 	RequestMapLock.Lock()
-	defer RequestMapLock.Unlock()
-
 	nc := RequestMap[requestId]
 	delete(RequestMap, requestId)
+	RequestMapLock.Unlock()
 
 	if nc == nil {
 		return
