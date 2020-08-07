@@ -30,10 +30,6 @@ type Log struct {
 }
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
-	//startTime := time.Now().UnixNano()
-	//str, _ := json.Marshal(req)
-	//fmt.Println(startTime, string(str))
-	//fmt.Printf("%v\t%v\t%v\t", "acquire", time.Now().UnixNano(), req.RequestId)
 	st := time.Now().UnixNano()
 	if req.AccountId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "account ID cannot be empty")
@@ -62,13 +58,6 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return &pb.AcquireContainerReply{}, nil
 	}
 
-	fmt.Printf("Call Acquire Container, RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
-		req.RequestId,
-		log.nodeId,
-		log.fn,
-		log.mem,
-		(log.mt-log.st)/1000000,
-		req.FunctionConfig.MemoryInBytes/1048576)
 
 	return res, nil
 }
@@ -97,3 +86,13 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil
 }
+
+
+
+//fmt.Printf("Call Acquire Container, RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
+//	req.RequestId,
+//	log.nodeId,
+//	log.fn,
+//	log.mem,
+//	(log.mt-log.st)/1000000,
+//	req.FunctionConfig.MemoryInBytes/1048576)

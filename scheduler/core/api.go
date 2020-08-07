@@ -27,29 +27,29 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 	reqMem := req.FunctionConfig.MemoryInBytes
 
 	var node *Node
-	var press float64
+	var count int64 //表示container的会用数量
 	var container *Container
 
-	NodesLock.RLock()
-	//发现一个满足要求，且压力最小的node
+	NodesLock.Lock()
+	//发现一个满足要求的container，且使用人数是最少的container
 	for _, n := range nodes {
-		if !n.Satisfy(funcName, reqMem) {
+		satisfy, usedCount := n.Satisfy(funcName, reqMem)
+		if !satisfy { //如果不满足直接返回
 			continue
 		}
-		p := n.CalcNodePress()
 
 		//如果node为null，就直接赋值
 		if node == nil {
-			node, press = n, p
+			node, count = n, usedCount
 			continue
 		}
 
-		//如果p的压力比选中的压力小，就使用新的
-		if p < press {
-			node, press = n, p
+		//如果使用数量少，就替换
+		if usedCount < count {
+			node, count = n, usedCount
 		}
 	}
-	NodesLock.RUnlock()
+	NodesLock.Unlock()
 	//如果没有找到合适的node，就返回nil
 	if node == nil {
 		return nil
@@ -92,6 +92,6 @@ func Return(req *pb.ReturnContainerRequest) {
 		PrintNodes("timer")
 	}
 	count++
-
-	node.Return(container)
+	actualUseMem := req.MaxMemoryUsageInBytes
+	node.Return(container, actualUseMem)
 }

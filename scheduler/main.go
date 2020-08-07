@@ -7,7 +7,6 @@ import (
 	"com/aliyun/serverless/scheduler/server"
 	"com/aliyun/serverless/scheduler/utils/groble"
 	"fmt"
-	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -16,8 +15,6 @@ import (
 )
 
 func main() {
-	pid := unix.Getpid()
-	fmt.Printf("pid=%v", pid)
 	InitResourceMainEndpoint()
 	go handler.AcquireContainerHandler() //启动容器请求处理器
 	go handler.ReturnContainerHandler()  //启动容器归还处理器

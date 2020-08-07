@@ -8,7 +8,7 @@ import (
 
 //存放节点信息
 type Node struct {
-	lock       sync.RWMutex
+	lock       sync.Mutex
 	NodeID     string                //节点id TODO sync
 	Address    string                //节点地址 TODO sync
 	Port       int64                 //节点端口 TODO sync
@@ -28,22 +28,23 @@ func NewNode(nodeId string, address string, port int64, maxMem int64, usedMem in
 
 //计算节点压力
 func (node *Node) CalcNodePress() float64 {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	press := float64(node.UserCount) / float64(5)
 	return press
 }
 
-//判断节点是否满足container的要求
-func (node *Node) Satisfy(funcName string, reqMem int64) bool {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+//判断节点是否满足container的要求,和这个container的使用人数
+func (node *Node) Satisfy(funcName string, reqMem int64) (bool, int64) {
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	container := node.Containers[funcName]
 	if container == nil {
-		return false
+		return false, 0
 	}
-	bool := node.Containers[funcName].UsedCount == 0 //没有人使用，就代表满足
-	return bool
+	//但前使用人数必须小于最大使用人数
+	bool := node.Containers[funcName].UsedCount < node.Containers[funcName].MaxUsedCount
+	return bool, node.Containers[funcName].UsedCount
 }
 
 //获取container
@@ -57,17 +58,18 @@ func (node *Node) Acquire(funcName string, reqMem int64) *Container {
 }
 
 //归还container
-func (node *Node) Return(container *Container) {
+func (node *Node) Return(container *Container, actualUseMem int64) {
 	node.lock.Lock()
 	defer node.lock.Unlock()
 	node.UserCount--
 	container.UsedCount-- //减少使用人数
+	container.MaxUsedCount = container.MaxUsedMem / actualUseMem
 }
 
 //得到node中container的数量
 func (node *Node) GetContainerCount() int {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	return len(node.Containers)
 }
 
@@ -80,18 +82,20 @@ func (node *Node) AddContainer(container *Container) {
 
 //获得Container
 func (node *Node) GetContainer(funcName string) *Container {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	container := node.Containers[funcName]
 	return container
 }
 
 func (node *Node) ToString() string {
-	node.lock.RLock()
-	defer node.lock.RUnlock()
+	node.lock.Lock()
+	defer node.lock.Unlock()
 	var mapStr string
 	for _, v := range node.Containers {
-		mapStr += v.FunName + " " + strconv.Itoa(v.UsedCount) + " " + strconv.FormatInt(v.UsedMem/1024/1024, 10) + ", "
+		mapStr += v.FunName + " " +
+			strconv.FormatInt(v.UsedCount, 10) + "/" + strconv.FormatInt(v.MaxUsedCount, 10) + " " +
+			strconv.FormatInt(v.MaxUsedMem/1024/1024, 10) + ", "
 	}
 	return mapStr
 }

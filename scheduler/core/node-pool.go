@@ -9,7 +9,7 @@ import (
 
 //用于存放所有node,使用内存越小的放在越后面
 var nodes = make([]*Node, 0, 100)
-var NodesLock sync.RWMutex
+var NodesLock sync.Mutex
 
 //添加一个Node
 func AddNode(node *Node) {
@@ -20,15 +20,15 @@ func AddNode(node *Node) {
 
 //得到Nodes数量
 func GetNodeCount() int {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	return len(nodes)
 }
 
 //计算nodes的压力,TODO 只有node handler协程才会调用这个方法所以不用加锁
 func CalcNodesPress() float64 {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var totalPress float64
 	for _, n := range nodes {
 		totalPress += n.CalcNodePress()
@@ -39,8 +39,8 @@ func CalcNodesPress() float64 {
 
 //获取container最少的node
 func GetMinContainerNode() *Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	var node = nodes[0]
 	for _, n := range nodes {
 		if len(n.Containers) < len(node.Containers) {
@@ -50,10 +50,20 @@ func GetMinContainerNode() *Node {
 	return node
 }
 
+func GetNodes() []*Node {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	var ns = make([]*Node, 0, 100)
+	for _, n := range nodes {
+		ns = append(ns, n)
+	}
+	return ns
+}
+
 //根据请求，返回node
 func GetSuitableNodes(reqMap map[string]*pb.AcquireContainerRequest) map[string]*Node {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	size := len(nodes)
 	s := rand.Intn(size)
 	resMap := make(map[string]*Node)
@@ -102,8 +112,8 @@ func GetSuitableNodes(reqMap map[string]*pb.AcquireContainerRequest) map[string]
 //}
 
 func PrintNodes(tag string) {
-	NodesLock.RLock()
-	defer NodesLock.RUnlock()
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
 	fmt.Printf("****************************%v*******************************\n", tag)
 	for i := 0; i < len(nodes); i++ {
 		node := nodes[i]

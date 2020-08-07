@@ -2,12 +2,14 @@ package core
 
 //存放container信息
 type Container struct {
-	FunName   string //函数名字
-	Id        string //容器id
-	UsedCount int    //使用数量
-	UsedMem   int64  //使用内存
-	//lock      sync.RWMutex
+	FunName      string //函数名字
+	Id           string //容器id
+	UsedCount    int64  //使用数量
+	UsedMem      int64  //使用内存
+	MaxUsedMem   int64  //最大使用内存
+	MaxUsedCount int64  //最大使用数量，会根据实际内存去计算
 }
+
 //
 //////得到容器使用内存大小
 //func (container *Container) GetUsedMem() int64 {

@@ -12,12 +12,12 @@ import (
 	当使用率高的时候就去申请资源，
 	当使用率低的时候就释放资源
 */
-const ReservePress = 0.5                 //申请压力
-const ReleasePress = 0.3                 //释放压力
-const AccountId = "1317891723692367"     //TODO 线上可能会变化
-const MinNodeCount = 10                  //最少节点数量
-const MaxNodeCount = 20                  //最大节点数量
-const SleepTime = time.Millisecond * 100 //当没有事干的时候睡眠多少毫秒
+const ReservePress = 100                   //申请压力
+const ReleasePress = 0.3                   //释放压力
+const AccountId = "1317891723692367"       //TODO 线上可能会变化
+const MinNodeCount = 10                    //最少节点数量
+const MaxNodeCount = 20                    //最大节点数量
+const SleepTime = time.Millisecond * 10000 //当没有事干的时候睡眠多少毫秒
 
 //MinNodeCount=a,MaxNodeCount=b
 //(0,a)申请资源
