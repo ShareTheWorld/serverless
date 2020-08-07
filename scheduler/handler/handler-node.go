@@ -32,6 +32,7 @@ func NodeHandler() {
 		if size < MinNodeCount {
 			node := ReserveOneNode()
 			core.AddNode(node)
+			core.PrintNodes("reserve node ")
 			continue
 		}
 		press := core.CalcNodesPress() //计算节点压力
@@ -75,7 +76,6 @@ func NodeHandler() {
 
 //这个方法需要保证一定要申请一个Node,TODO 需要为节点实例话所已知的函数
 func ReserveOneNode() *core.Node {
-	core.PrintNodes("reserve node")
 	st := time.Now().UnixNano()
 	for {
 		//预约一个node

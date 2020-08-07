@@ -2,6 +2,7 @@ package core
 
 import (
 	pb "com/aliyun/serverless/scheduler/proto"
+	"math/rand"
 	"sync"
 )
 
@@ -32,7 +33,11 @@ func Acquire(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
 
 	NodesLock.Lock()
 	//发现一个满足要求的container，且使用人数是最少的container
-	for _, n := range nodes {
+	size := len(nodes)
+	s := rand.Intn(size) //随机选择一个开始位置
+	for i := 0; i < size; i++ {
+		p := (i + s) % size
+		n := nodes[p]
 		satisfy, usedCount := n.Satisfy(funcName, reqMem)
 		if !satisfy { //如果不满足直接返回
 			continue

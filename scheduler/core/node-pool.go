@@ -37,18 +37,18 @@ func CalcNodesPress() float64 {
 	return avgPress
 }
 
-//获取container最少的node
-func GetMinContainerNode() *Node {
-	NodesLock.Lock()
-	defer NodesLock.Unlock()
-	var node = nodes[0]
-	for _, n := range nodes {
-		if len(n.Containers) < len(node.Containers) {
-			node = n
-		}
-	}
-	return node
-}
+////获取container最少的node
+//func GetMinContainerNode() *Node {
+//	NodesLock.Lock()
+//	defer NodesLock.Unlock()
+//	var node = nodes[0]
+//	for _, n := range nodes {
+//		if len(n.Containers) < len(node.Containers) {
+//			node = n
+//		}
+//	}
+//	return node
+//}
 
 func GetNodes() []*Node {
 	NodesLock.Lock()
@@ -121,7 +121,7 @@ func PrintNodes(tag string) {
 		fmt.Printf("No:%v, NodeId:%v, Mem:%v/%v, UserCount:%v, containerCount:%v,  %v\n",
 			i, node.NodeID, node.UsedMem/1024/1024,
 			node.MaxMem/1024/1024, node.UserCount,
-			len(node.Containers), mapStr)
+			len(node.CollectionMap), mapStr)
 	}
 	fmt.Printf("**************************************************************\n\n")
 

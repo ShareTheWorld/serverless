@@ -51,17 +51,19 @@ func GetReq() map[string]*pb.AcquireContainerRequest {
 func ContainerHandler() {
 	for {
 		if !isChange {
-			time.Sleep(time.Millisecond * 1000) //随眠100毫秒
+			time.Sleep(time.Millisecond * 100) //随眠100毫秒
 			continue
 		}
 		nodes := core.GetNodes()
 		reqMap := GetReq()
 
 		//未每个node加载
-		for _, req := range reqMap {
-			for _, node := range nodes {
-				wg.Add(1)
-				go HandleFuncName(node, req)
+		for i := 0; i < core.CollectionCapacity; i++ {
+			for _, req := range reqMap {
+				for _, node := range nodes {
+					wg.Add(1)
+					go HandleFuncName(node, req)
+				}
 			}
 		}
 		wg.Wait()
@@ -70,10 +72,9 @@ func ContainerHandler() {
 
 }
 func HandleFuncName(node *core.Node, req *pb.AcquireContainerRequest) {
-	//如果这个node中有这个container就不创建了
-	container := node.GetContainer(req.FunctionName)
-	if container == nil {
-		container = CreateContainer(node, req)
+	//判断这个node是否缺乏这个函数实例
+	if node.Lack(req.FunctionName) {
+		container := CreateContainer(node, req)
 		node.AddContainer(container)
 		core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
 	}
