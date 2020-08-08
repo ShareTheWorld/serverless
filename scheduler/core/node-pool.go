@@ -18,6 +18,15 @@ func AddNode(node *Node) {
 	nodes = append(nodes, node)
 }
 
+//移出最后一个node
+func RemoveLastNode() *Node {
+	NodesLock.Lock()
+	defer NodesLock.Unlock()
+	node := nodes[len(nodes)-1]
+	nodes = nodes[:len(nodes)-1]
+	return node
+}
+
 //得到Nodes数量
 func GetNodeCount() int {
 	NodesLock.Lock()

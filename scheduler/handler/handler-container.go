@@ -20,24 +20,20 @@ var NodeMaxContainerCount = 15 //node加载container最大数量
 //	funcQueue <- req
 //}
 
-var CreateContainerWG sync.WaitGroup
+//var CreateContainerWG sync.WaitGroup
 
 var FuncNameMap = make(map[string]*pb.AcquireContainerRequest) // New empty set
 var FuncNameMapLock sync.Mutex
 
-var locker = new(sync.Mutex)
-var cond = sync.NewCond(locker)
-var IsChange = false
+//var locker = new(sync.Mutex)
+//var cond = sync.NewCond(locker)
+//var IsChange = false
 
 //添加req到map中
 func AddReq(req *pb.AcquireContainerRequest) {
 	FuncNameMapLock.Lock()
 	if FuncNameMap[req.FunctionName] == nil {
 		FuncNameMap[req.FunctionName] = req
-		//cond.L.Lock()
-		//IsChange = true
-		//cond.Signal()
-		//cond.L.Unlock()
 		go CreateContainerHandler(req)
 	}
 	FuncNameMapLock.Unlock()
@@ -53,51 +49,44 @@ func GetReq() map[string]*pb.AcquireContainerRequest {
 	FuncNameMapLock.Unlock()
 	return tmp
 }
-func ContainerHandler() {
-	for {
-		cond.L.Lock()
-		if !IsChange { //如果没有改变就等待
-			cond.Wait()
-		}
-		IsChange = false
-		cond.L.Unlock()
-		nodes := core.GetNodes()
-		reqMap := GetReq()
-
-		//未每个node加载
-		for i := 0; i < core.CollectionCapacity; i++ {
-			for _, req := range reqMap {
-				for _, node := range nodes {
-					CreateContainerWG.Add(1)
-					go HandleFuncName(node, req)
-				}
-			}
-			CreateContainerWG.Wait()
-			core.PrintNodes(" create container ")
-
-		}
-	}
-}
 
 func CreateContainerHandler(req *pb.AcquireContainerRequest) {
 	nodes := core.GetNodes()
-	for i := 0; i < core.CollectionCapacity; i++ {
+	for i := 0; i < core.CollectionMaxCapacity; i++ {
+		var wg sync.WaitGroup
 		for _, node := range nodes {
-			CreateContainerWG.Add(1)
-			go HandleFuncName(node, req)
+			wg.Add(1)
+			go HandleFuncName(node, req, &wg)
 		}
-		CreateContainerWG.Wait()
+		wg.Wait()
 		core.PrintNodes(" create container ")
 	}
 }
 
-func HandleFuncName(node *core.Node, req *pb.AcquireContainerRequest) {
+//为新node加载函数实例
+func LoadFuncForNewNode(node *core.Node) {
+	reqMap := GetReq()
+	//未每个node加载
+	var i int64 = 0
+	for ; i < node.CollectionMaxCapacity; i++ {
+		var wg sync.WaitGroup
+		for _, req := range reqMap {
+			wg.Add(1)
+			go HandleFuncName(node, req, &wg)
+		}
+		wg.Wait()
+		core.PrintNodes(" create container ")
+	}
+}
+
+//处理一个函数的加载
+func HandleFuncName(node *core.Node, req *pb.AcquireContainerRequest, wg *sync.WaitGroup) {
+	defer wg.Done()
 	//判断这个node是否缺乏这个函数实例
 	if node.Lack(req.FunctionName) {
 		container := CreateContainer(node, req)
 		node.AddContainer(container)
 	}
-	CreateContainerWG.Done()
 }
 
 ////保证创建一个container
@@ -121,7 +110,8 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 		}
 
 		//将container添加到node中
-		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId, MaxUsedMem: req.FunctionConfig.MemoryInBytes, MaxUsedCount: core.DefaultMaxUsedCount}
+		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId,
+			MaxUsedMem: req.FunctionConfig.MemoryInBytes, MaxUsedCount: core.DefaultMaxUsedCount}
 		et := time.Now().UnixNano()
 		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576, (et-st)/1000000, node.NodeID)
 		return container
@@ -174,5 +164,32 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 //		container = CreateContainer(node, req)
 //		node.AddContainer(container)
 //		core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
+//	}
+//}
+
+//
+//func ContainerHandler() {
+//	for {
+//		cond.L.Lock()
+//		if !IsChange { //如果没有改变就等待
+//			cond.Wait()
+//		}
+//		IsChange = false
+//		cond.L.Unlock()
+//		nodes := core.GetNodes()
+//		reqMap := GetReq()
+//
+//		//未每个node加载
+//		for i := 0; i < core.CollectionCapacity; i++ {
+//			for _, req := range reqMap {
+//				for _, node := range nodes {
+//					CreateContainerWG.Add(1)
+//					go HandleFuncName(node, req)
+//				}
+//			}
+//			CreateContainerWG.Wait()
+//			core.PrintNodes(" create container ")
+//
+//		}
 //	}
 //}

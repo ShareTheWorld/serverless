@@ -2,7 +2,8 @@ package core
 
 import "strconv"
 
-var DefaultMaxUsedCount int64 = 2
+var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
+var CollectionMaxCapacity = 5     //集合最大容量
 
 //存放container信息
 type Container struct {
@@ -14,8 +15,6 @@ type Container struct {
 	MaxUsedCount int64  //最大使用数量，会根据实际内存去计算
 }
 
-var CollectionCapacity = 2 //最大容器数量
-
 //container 的一个集合
 type Collection struct {
 	FunName      string //函数名字
@@ -23,6 +22,7 @@ type Collection struct {
 	UsedMem      int64  //总的使用内存
 	MaxUsedMem   int64  //每个最大使用内存
 	MaxUsedCount int64  //每个container的最大使用数量
+	Capacity     int64  //Collection的容量
 	Containers   []*Container
 }
 
@@ -33,7 +33,7 @@ func (cs *Collection) AddContainer(container *Container) {
 
 //得到容器数量
 func (cs *Collection) Lack() bool {
-	return len(cs.Containers) < CollectionCapacity
+	return int64(len(cs.Containers)) < cs.Capacity
 }
 
 //判断节点是否满足container的要求,和这个collection的使用人数

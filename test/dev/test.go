@@ -1,14 +1,17 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
+
+var s = make([]int, 0, 10)
 
 func main() {
 	//str := ""
-	s := fmt.Sprintf("aa=%v", 1)
-	if s == "aa=1" {
-		fmt.Printf("****")
-	}
-	fmt.Printf("end")
+
+	s = append(s, 1)
+	s = append(s, 2)
+	s = append(s, 3)
+	s = append(s, 4)
+	s = s[:len(s)-1]
+	fmt.Println(s)
+
 }

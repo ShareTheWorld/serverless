@@ -7,20 +7,22 @@ import (
 
 //存放节点信息
 type Node struct {
-	lock          sync.Mutex
-	NodeID        string                 //节点id TODO sync
-	Address       string                 //节点地址 TODO sync
-	Port          int64                  //节点端口 TODO sync
-	MaxMem        int64                  //最大内存
-	UsedMem       int64                  //使用内存
-	UserCount     int                    //使用者数量 TODO sync
-	Client        pb.NodeServiceClient   //节点连接 TODO sync
-	CollectionMap map[string]*Collection //存放所有的Container
+	lock                  sync.Mutex
+	NodeID                string                 //节点id TODO sync
+	Address               string                 //节点地址 TODO sync
+	Port                  int64                  //节点端口 TODO sync
+	MaxMem                int64                  //最大内存
+	UsedMem               int64                  //使用内存
+	UserCount             int                    //使用者数量 TODO sync
+	Client                pb.NodeServiceClient   //节点连接 TODO sync
+	CollectionMaxCapacity int64                  //默认每个函数数量
+	CollectionMap         map[string]*Collection //存放所有的Container
 }
 
 ////实例化一个node
-func NewNode(nodeId string, address string, port int64, maxMem int64, usedMem int64, client pb.NodeServiceClient) *Node {
-	node := &Node{NodeID: nodeId, Address: address, Port: port, MaxMem: maxMem, UsedMem: usedMem, Client: client}
+func NewNode(nodeId string, address string, port int64, maxMem int64, usedMem int64, client pb.NodeServiceClient, collectionMaxCapacity int64) *Node {
+	node := &Node{NodeID: nodeId, Address: address, Port: port, MaxMem: maxMem,
+		UsedMem: usedMem, Client: client, CollectionMaxCapacity: collectionMaxCapacity}
 	node.CollectionMap = make(map[string]*Collection)
 	return node
 }
@@ -87,7 +89,7 @@ func (node *Node) AddContainer(container *Container) {
 	cs := node.CollectionMap[container.FunName]
 	if cs == nil {
 		cs = &Collection{FunName: container.FunName, UsedCount: 0, UsedMem: container.UsedMem,
-			MaxUsedMem: container.MaxUsedMem, MaxUsedCount: container.MaxUsedCount}
+			MaxUsedMem: container.MaxUsedMem, MaxUsedCount: container.MaxUsedCount, Capacity: node.CollectionMaxCapacity}
 		node.CollectionMap[container.FunName] = cs
 	}
 	cs.AddContainer(container)

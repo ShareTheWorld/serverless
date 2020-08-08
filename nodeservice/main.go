@@ -59,7 +59,7 @@ func (s NodeService) InvokeFunction(req *pb.InvokeFunctionRequest, res pb.NodeSe
 func (s NodeService) GetStats(ctx context.Context, in *pb.GetStatsRequest) (*pb.GetStatsReply, error) {
 	fmt.Printf("call function: NodeService.GetStats, %v\n", in)
 	res := new(pb.GetStatsReply)
-	res.NodeStats = &pb.NodeStats{TotalMemoryInBytes: 3 * 1024 * 1024 * 1024, MemoryUsageInBytes: 128 * 1024 * 1024}
+	res.NodeStats = &pb.NodeStats{TotalMemoryInBytes: 3 * 1024 * 1024 * 1024, MemoryUsageInBytes: 128 * 1024 * 1024, CpuUsagePct: 70}
 	return res, nil
 }
 
