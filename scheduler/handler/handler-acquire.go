@@ -20,7 +20,7 @@ type Pkg struct {
 	ch  chan *pb.AcquireContainerReply
 }
 
-var acquireQueue = make(chan Pkg, 1000)
+var acquireQueue = make(chan Pkg, 5000)
 
 //添加请求容器的请求到队列中
 func AddAcquireContainerToAcquireHandler(req *pb.AcquireContainerRequest, ch chan *pb.AcquireContainerReply) {

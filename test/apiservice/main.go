@@ -46,7 +46,7 @@ func main() {
 	//function_15		360		10		40
 	//function_16
 
-	go call("func_name_001", 128*1024*1024, 1000, 100, 500)
+	go call("final_function_13", 128*1024*1024, 1000, 20, 500)
 	go call("func_name_002", 128*1024*1024, 1000, 200, 500)
 	go call("func_name_003", 256*1024*1024, 510, 10, 2000)
 	go call("func_name_004", 256*1024*1024, 320, 20, 2500)

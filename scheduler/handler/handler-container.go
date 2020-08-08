@@ -13,26 +13,32 @@ import (
 /*
 	处理container的加载
 */
-var funcQueue = make(chan *pb.AcquireContainerRequest, 40000)
+//var funcQueue = make(chan *pb.AcquireContainerRequest, 40000)
 var NodeMaxContainerCount = 15 //node加载container最大数量
 
-func AddAcquireContainerToContainerHandler(req *pb.AcquireContainerRequest) {
-	funcQueue <- req
-}
+//func AddAcquireContainerToContainerHandler(req *pb.AcquireContainerRequest) {
+//	funcQueue <- req
+//}
 
-var wg sync.WaitGroup
+var CreateContainerWG sync.WaitGroup
 
 var FuncNameMap = make(map[string]*pb.AcquireContainerRequest) // New empty set
 var FuncNameMapLock sync.Mutex
 
-var isChange = false
+var locker = new(sync.Mutex)
+var cond = sync.NewCond(locker)
+var IsChange = false
 
 //添加req到map中
 func AddReq(req *pb.AcquireContainerRequest) {
 	FuncNameMapLock.Lock()
 	if FuncNameMap[req.FunctionName] == nil {
 		FuncNameMap[req.FunctionName] = req
-		isChange = true
+		//cond.L.Lock()
+		//IsChange = true
+		//cond.Signal()
+		//cond.L.Unlock()
+		go CreateContainerHandler(req)
 	}
 	FuncNameMapLock.Unlock()
 }
@@ -44,16 +50,17 @@ func GetReq() map[string]*pb.AcquireContainerRequest {
 	for k, v := range FuncNameMap {
 		tmp[k] = v
 	}
-	isChange = false
 	FuncNameMapLock.Unlock()
 	return tmp
 }
 func ContainerHandler() {
 	for {
-		if !isChange {
-			time.Sleep(time.Millisecond * 100) //随眠100毫秒
-			continue
+		cond.L.Lock()
+		if !IsChange { //如果没有改变就等待
+			cond.Wait()
 		}
+		IsChange = false
+		cond.L.Unlock()
 		nodes := core.GetNodes()
 		reqMap := GetReq()
 
@@ -61,24 +68,36 @@ func ContainerHandler() {
 		for i := 0; i < core.CollectionCapacity; i++ {
 			for _, req := range reqMap {
 				for _, node := range nodes {
-					wg.Add(1)
+					CreateContainerWG.Add(1)
 					go HandleFuncName(node, req)
 				}
 			}
-		}
-		wg.Wait()
-		//fmt.Printf("create finsih")
-	}
+			CreateContainerWG.Wait()
+			core.PrintNodes(" create container ")
 
+		}
+	}
 }
+
+func CreateContainerHandler(req *pb.AcquireContainerRequest) {
+	nodes := core.GetNodes()
+	for i := 0; i < core.CollectionCapacity; i++ {
+		for _, node := range nodes {
+			CreateContainerWG.Add(1)
+			go HandleFuncName(node, req)
+		}
+		CreateContainerWG.Wait()
+		core.PrintNodes(" create container ")
+	}
+}
+
 func HandleFuncName(node *core.Node, req *pb.AcquireContainerRequest) {
 	//判断这个node是否缺乏这个函数实例
 	if node.Lack(req.FunctionName) {
 		container := CreateContainer(node, req)
 		node.AddContainer(container)
-		core.PrintNodes(fmt.Sprintf("create container fn:%v, mem:%v", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576))
 	}
-	wg.Done()
+	CreateContainerWG.Done()
 }
 
 ////保证创建一个container
@@ -102,7 +121,7 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 		}
 
 		//将container添加到node中
-		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId, MaxUsedMem: req.FunctionConfig.MemoryInBytes, MaxUsedCount: 1}
+		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId, MaxUsedMem: req.FunctionConfig.MemoryInBytes, MaxUsedCount: core.DefaultMaxUsedCount}
 		et := time.Now().UnixNano()
 		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576, (et-st)/1000000, node.NodeID)
 		return container
@@ -119,10 +138,10 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 //		}
 //		resMap := core.GetSuitableNodes(reqMap)
 //		for funcName, req := range reqMap {
-//			wg.Add(1)
+//			CreateContainerWG.Add(1)
 //			go HandleFuncName(resMap[funcName], req)
 //		}
-//		wg.Wait()
+//		CreateContainerWG.Wait()
 //		LoadFinishContainer()
 //	}
 //}

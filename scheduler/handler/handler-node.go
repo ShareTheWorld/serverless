@@ -3,6 +3,7 @@ package handler
 import (
 	"com/aliyun/serverless/scheduler/client"
 	"com/aliyun/serverless/scheduler/core"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -26,6 +27,7 @@ const SleepTime = time.Millisecond * 10000 //当没有事干的时候睡眠多�
 //[b,)只能释放资源
 
 func NodeHandler() {
+	go PrintNodeStats()
 	for {
 		size := core.GetNodeCount()
 		//(0,a)不满足最低要求，无条件直接申请资源
@@ -71,6 +73,25 @@ func NodeHandler() {
 			}
 			continue
 		}
+	}
+}
+
+func PrintNodeStats() {
+	for {
+		time.Sleep(time.Millisecond * 10000) //没10秒打印一次node状态
+		nodes := core.GetNodes()
+		core.PrintNodes("local node status")
+		fmt.Printf("****************************%v*******************************\n", "remote node stats")
+		for _, n := range nodes {
+			reply := client.GetStats(n.Client, "")
+			jsonStr, err := json.Marshal(reply)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println(string(jsonStr))
+		}
+		fmt.Printf("**************************************************************\n\n")
 	}
 }
 

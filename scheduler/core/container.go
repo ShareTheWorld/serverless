@@ -2,6 +2,8 @@ package core
 
 import "strconv"
 
+var DefaultMaxUsedCount int64 = 2
+
 //存放container信息
 type Container struct {
 	FunName      string //函数名字
@@ -68,6 +70,9 @@ func (cs *Collection) Acquire(reqMem int64) *Container {
 func (cs *Collection) Return(container *Container, actualUseMem int64) {
 	cs.UsedCount--
 	container.UsedCount--
+	if actualUseMem == 0 {
+		actualUseMem = 1 * 1024 * 1024
+	}
 	cs.MaxUsedCount = cs.MaxUsedMem / actualUseMem
 	container.MaxUsedCount = container.MaxUsedMem / actualUseMem
 	cs.UsedMem = actualUseMem
@@ -76,7 +81,7 @@ func (cs *Collection) Return(container *Container, actualUseMem int64) {
 
 func (cs *Collection) ToString() string {
 	info := "{" + cs.FunName + ", " + str(cs.UsedCount) + "/" + str(int64(len(cs.Containers))*cs.MaxUsedCount) +
-		", " + str(cs.UsedMem/1024/1024) + "/" + str(cs.MaxUsedMem/1024/1024)+", "
+		", " + str(cs.UsedMem/1024/1024) + "/" + str(cs.MaxUsedMem/1024/1024) + ", "
 
 	for _, c := range cs.Containers {
 		//info += "[" + c.FunName + ", " + str(c.UsedCount) + ", " + str(c.UsedMem/1024/1024) + "], "

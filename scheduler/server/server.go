@@ -58,6 +58,9 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 		return &pb.AcquireContainerReply{}, nil
 	}
 
+	//if req.FunctionName == "final_function_13" {
+	//	res.NodeId = "refuse return"
+	//}
 
 	return res, nil
 }
@@ -86,8 +89,6 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil
 }
-
-
 
 //fmt.Printf("Call Acquire Container, RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, reqMem:%v\n",
 //	req.RequestId,
