@@ -64,7 +64,8 @@ func CreateContainerHandler(req *pb.AcquireContainerRequest) {
 }
 
 //为新node加载函数实例
-func LoadFuncForNewNode(node *core.Node) {
+func LoadFuncForNewNode(node *core.Node, allWg *sync.WaitGroup) {
+	defer allWg.Done()
 	reqMap := GetReq()
 	//未每个node加载
 	var i int64 = 0
@@ -77,6 +78,7 @@ func LoadFuncForNewNode(node *core.Node) {
 		wg.Wait()
 		core.PrintNodes(" create container ")
 	}
+
 }
 
 //处理一个函数的加载

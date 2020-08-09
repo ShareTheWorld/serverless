@@ -5,6 +5,7 @@ import (
 	"com/aliyun/serverless/scheduler/core"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -16,11 +17,12 @@ import (
 //const ReservePress = 100                             //申请压力
 //const ReleasePress = 0.3                             //释放压力
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 4                    //最少节点数量
+const MinNodeCount = 5                    //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
-const ReservePress = 65                   //预定node的cpu压力
-const ReleasePress = 30                   //释放node的cpu使用率
+const ReserveNodeStep = 5                 //发现node压力过大时，每次申请多少个node
+const ReservePress = 0.4                  //预定node的cpu压力
+const ReleasePress = 0.2                  //释放node的cpu使用率
 //const NodeSniffIntervalTime = time.Millisecond * 2000 //Node嗅探间隔时间
 
 //MinNodeCount=a,MaxNodeCount=b
@@ -34,7 +36,7 @@ func NodeHandler() {
 		size := core.GetNodeCount()
 		//(0,a)不满足最低要求，无条件直接申请资源
 		if size < MinNodeCount {
-			node := ReserveOneNode(5)
+			node := ReserveOneNode(4)
 			core.AddNode(node)
 			core.PrintNodes("reserve node ")
 			continue
@@ -45,10 +47,8 @@ func NodeHandler() {
 		//[a,a]只能申请资源
 		if size == MinNodeCount {
 			if press > ReservePress {
-				node := ReserveOneNode(2)
-				core.AddNode(node)
-				LoadFuncForNewNode(node) //为新节点加载历史函数
-				fmt.Println(node)
+				DownNodesPress()
+				time.Sleep(SleepTime)
 			} else {
 				time.Sleep(SleepTime)
 			}
@@ -58,11 +58,8 @@ func NodeHandler() {
 		//(a,b)申请或者释放资源
 		if size > MinNodeCount && size < MaxNodeCount {
 			if press > ReservePress { //当压力达到0.7就申请一个node
-				node := ReserveOneNode(2)
-				LoadFuncForNewNode(node)
-				core.AddNode(node)
-				LoadFuncForNewNode(node) //为新节点加载历史函数
-				fmt.Println(node)
+				DownNodesPress()
+				time.Sleep(SleepTime)
 			} else if press < ReleasePress { //当压力小于0.4就释放一个
 				ReleaseOneNode()
 			} else {
@@ -80,6 +77,26 @@ func NodeHandler() {
 			continue
 		}
 	}
+}
+
+//减少node的压力
+func DownNodesPress() {
+	//每次添加指定步长的node，但是不能超过总量
+	core.PrintNodes("Reserve Node Before")
+	var allWg sync.WaitGroup
+	for i := 0; i < ReserveNodeStep; i++ {
+		size := core.GetNodeCount()
+		if size >= MaxNodeCount { //如果node数量已经达到限制了，就什么也不做
+			break
+		}
+		node := ReserveOneNode(2)
+		core.AddNode(node) //必须先添加，否则后面的计算node压力时，统计不到新增节点
+		allWg.Add(1)
+		go LoadFuncForNewNode(node, &allWg) //为新节点加载历史函数
+		fmt.Println(node)
+	}
+	allWg.Wait() //等待所有的节点创建完函数
+	core.PrintNodes("Reserve Node After")
 }
 
 //嗅探所有节点平均压力
@@ -107,6 +124,7 @@ func SniffAllNodeAvgPress() float64 {
 		return 0 //如果获取状态都失败，那么就直接返回0，表示没有压力
 	}
 	var avgPress = totalPress / float64(count) //计算平均压力
+	avgPress = avgPress / 100                  //将百分比换算成[0-2]，node都是两核的，最高可达到200%的cpu使用
 	return avgPress
 }
 
@@ -161,7 +179,13 @@ func ReserveOneNode(collectionMaxCapacity int64) *core.Node {
 }
 
 func ReleaseOneNode() {
-	node := core.RemoveLastNode()
-	time.Sleep(time.Millisecond * 5000) //5秒钟过后在释放
+	core.PrintNodes("Release Node Before")
+	node := core.RemoveLastNode() //这里从node池中移除了node，就不会再分配给其他节点了
+	for i := 0; i < 100; i++ {    //最多等待10秒
+		if node.UserCount <= 0 { //说明这个node没有使用者了
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
 	client.ReleaseNode("", node.NodeID)
 }

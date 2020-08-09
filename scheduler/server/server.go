@@ -57,7 +57,8 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
 	}
-	//
+
+	//TODO 测试使用逻辑，测试需要移除container, 函数调用错误日志打印
 	//if req.FunctionName == "final_function_13" {
 	//	res.NodeId = "refuse return"
 	//}
@@ -83,6 +84,8 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 		(et-log.st)/1000000,
 		req.MaxMemoryUsageInBytes/1048576,
 		req.DurationInNanos/1000000, req.ErrorMessage)
+	//TODO 测试使用逻辑
+	//if req.ErrorMessage != "" && log.fn != "final_function_13" {
 	if req.ErrorMessage != "" {
 		core.PrintNodes(" error ")
 	}
