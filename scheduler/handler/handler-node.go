@@ -17,12 +17,12 @@ import (
 //const ReservePress = 100                             //申请压力
 //const ReleasePress = 0.3                             //释放压力
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 5                    //最少节点数量
+const MinNodeCount = 6                    //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
-const ReserveNodeStep = 5                 //发现node压力过大时，每次申请多少个node
-const ReservePress = 0.4                  //预定node的cpu压力
-const ReleasePress = 0.2                  //释放node的cpu使用率
+const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
+const ReservePress = 0.5                  //预定node的cpu压力
+const ReleasePress = 0.25                  //释放node的cpu使用率
 //const NodeSniffIntervalTime = time.Millisecond * 2000 //Node嗅探间隔时间
 
 //MinNodeCount=a,MaxNodeCount=b
@@ -89,7 +89,7 @@ func DownNodesPress() {
 		if size >= MaxNodeCount { //如果node数量已经达到限制了，就什么也不做
 			break
 		}
-		node := ReserveOneNode(2)
+		node := ReserveOneNode(1)
 		core.AddNode(node) //必须先添加，否则后面的计算node压力时，统计不到新增节点
 		allWg.Add(1)
 		go LoadFuncForNewNode(node, &allWg) //为新节点加载历史函数

@@ -3,7 +3,7 @@ package core
 import "strconv"
 
 var DefaultMaxUsedCount int64 = 2 //Container实例的默认最大连接数
-var CollectionMaxCapacity = 5     //集合最大容量
+var CollectionMaxCapacity = 1     //集合最大容量
 
 //存放container信息
 type Container struct {
