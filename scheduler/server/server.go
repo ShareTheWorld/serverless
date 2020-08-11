@@ -1,18 +1,14 @@
 package server
 
 import (
-	"com/aliyun/serverless/scheduler/core"
 	//"com/aliyun/serverless/scheduler/core"
 	"com/aliyun/serverless/scheduler/handler"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"context"
-	"fmt"
-
 	//"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync"
-	"time"
 )
 
 type Server struct {
@@ -30,8 +26,8 @@ type Log struct {
 }
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
-	st := time.Now().UnixNano()
-	req.FunctionConfig.MemoryInBytes = 512 * 1024 * 1024
+	//st := time.Now().UnixNano()
+	req.FunctionConfig.MemoryInBytes = 1024 * 1024 * 1024
 	if req.AccountId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "account ID cannot be empty")
 	}
@@ -49,11 +45,11 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 
 	res := <-ch
 
-	mt := time.Now().UnixNano()
-	log := Log{st, mt, req.FunctionName, req.FunctionConfig.MemoryInBytes / 1048576, res.NodeId}
-	lock.Lock()
-	logMap[req.RequestId] = &log
-	lock.Unlock()
+	//mt := time.Now().UnixNano()
+	//log := Log{st, mt, req.FunctionName, req.FunctionConfig.MemoryInBytes / 1048576, res.NodeId}
+	//lock.Lock()
+	//logMap[req.RequestId] = &log
+	//lock.Unlock()
 
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
@@ -68,28 +64,28 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 }
 
 func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
-	//fmt.Printf("%v\t%v\t%v\t", "return", time.Now().UnixNano(), req.RequestId)
-	et := time.Now().UnixNano()
-	id := req.RequestId
 
-	lock.Lock()
-	log := logMap[id]
-	lock.Unlock()
-	fmt.Printf("RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
-		req.RequestId,
-		log.nodeId,
-		log.fn,
-		log.mem,
-		(log.mt-log.st)/1000000,
-		(et-log.mt)/1000000,
-		(et-log.st)/1000000,
-		req.MaxMemoryUsageInBytes/1048576,
-		req.DurationInNanos/1000000, req.ErrorMessage)
-	//TODO 测试使用逻辑
-	//if req.ErrorMessage != "" && log.fn != "final_function_13" {
-	if req.ErrorMessage != "" {
-		core.PrintNodes(" error ")
-	}
+	//et := time.Now().UnixNano()
+	//id := req.RequestId
+	//
+	//lock.Lock()
+	//log := logMap[id]
+	//lock.Unlock()
+	//fmt.Printf("RequestId:%v, NodeId:%v, FN:%v, MEM:%v, SL:%v, FD:%v, RT:%v, mem:%v, time:%v, err:%v\n",
+	//	req.RequestId,
+	//	log.nodeId,
+	//	log.fn,
+	//	log.mem,
+	//	(log.mt-log.st)/1000000,
+	//	(et-log.mt)/1000000,
+	//	(et-log.st)/1000000,
+	//	req.MaxMemoryUsageInBytes/1048576,
+	//	req.DurationInNanos/1000000, req.ErrorMessage)
+	////TODO 测试使用逻辑
+	////if req.ErrorMessage != "" && log.fn != "final_function_13" {
+	//if req.ErrorMessage != "" {
+	//	core.PrintNodes(" error ")
+	//}
 	handler.AddReturnContainerToQueue(req)
 	return &pb.ReturnContainerReply{}, nil
 }

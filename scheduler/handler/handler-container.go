@@ -54,12 +54,14 @@ func CreateContainerHandler(req *pb.AcquireContainerRequest) {
 	nodes := core.GetNodes()
 	for i := 0; i < core.CollectionMaxCapacity; i++ {
 		var wg sync.WaitGroup
-		for _, node := range nodes {
+		for _, node := range nodes { //为每个node添加函数
 			wg.Add(1)
 			go HandleFuncName(node, req, &wg)
 		}
 		wg.Wait()
-		core.PrintNodes(" create container ")
+		//******************log*************************
+		//core.PrintNodes(" create container ")
+		//******************log*************************
 	}
 }
 
@@ -76,7 +78,9 @@ func LoadFuncForNewNode(node *core.Node, allWg *sync.WaitGroup) {
 			go HandleFuncName(node, req, &wg)
 		}
 		wg.Wait()
-		core.PrintNodes(" create container ")
+		//******************log*************************
+		//core.PrintNodes(" create container ")
+		//******************log*************************
 	}
 
 }

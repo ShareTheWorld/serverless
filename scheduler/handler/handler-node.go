@@ -17,12 +17,12 @@ import (
 //const ReservePress = 100                             //申请压力
 //const ReleasePress = 0.3                             //释放压力
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 6                    //最少节点数量
+const MinNodeCount = 10                   //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
 const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
 const ReservePress = 0.5                  //预定node的cpu压力
-const ReleasePress = 0.25                  //释放node的cpu使用率
+const ReleasePress = 0.25                 //释放node的cpu使用率
 //const NodeSniffIntervalTime = time.Millisecond * 2000 //Node嗅探间隔时间
 
 //MinNodeCount=a,MaxNodeCount=b
@@ -38,7 +38,9 @@ func NodeHandler() {
 		if size < MinNodeCount {
 			node := ReserveOneNode(4)
 			core.AddNode(node)
-			core.PrintNodes("reserve node ")
+			//******************log*************************
+			//core.PrintNodes("reserve node ")
+			//******************log*************************
 			continue
 		}
 		//press := core.CalcNodesPress() //计算节点压力
@@ -82,7 +84,9 @@ func NodeHandler() {
 //减少node的压力
 func DownNodesPress() {
 	//每次添加指定步长的node，但是不能超过总量
-	core.PrintNodes("Reserve Node Before")
+	//******************log*************************
+	//core.PrintNodes("Reserve Node Before")
+	//******************log*************************
 	var allWg sync.WaitGroup
 	for i := 0; i < ReserveNodeStep; i++ {
 		size := core.GetNodeCount()
@@ -96,13 +100,20 @@ func DownNodesPress() {
 		fmt.Println(node)
 	}
 	allWg.Wait() //等待所有的节点创建完函数
-	core.PrintNodes("Reserve Node After")
+	//******************log*************************
+	//core.PrintNodes("Reserve Node After")
+	//******************log*************************
 }
 
 //嗅探所有节点平均压力
 func SniffAllNodeAvgPress() float64 {
+	if true {
+		return 0.1
+	}
 	nodes := core.GetNodes()
-	core.PrintNodes("local node status")
+	//******************log*************************
+	//core.PrintNodes("local node status")
+	//******************log*************************
 	var count = 0
 	var totalPress float64 = 0
 	fmt.Printf("****************************%v*******************************\n", "remote node stats")
@@ -132,7 +143,9 @@ func PrintNodeStats() {
 	for {
 		time.Sleep(time.Millisecond * 10000) //没10秒打印一次node状态
 		nodes := core.GetNodes()
-		core.PrintNodes("local node status")
+		//******************log*************************
+		//core.PrintNodes("local node status")
+		//******************log*************************
 		fmt.Printf("****************************%v*******************************\n", "remote node stats")
 		for _, n := range nodes {
 			reply := client.GetStats(n.Client, "")
@@ -179,7 +192,9 @@ func ReserveOneNode(collectionMaxCapacity int64) *core.Node {
 }
 
 func ReleaseOneNode() {
-	core.PrintNodes("Release Node Before")
+	//******************log*************************
+	//core.PrintNodes("Release Node Before")
+	//******************log*************************
 	node := core.RemoveLastNode() //这里从node池中移除了node，就不会再分配给其他节点了
 	for i := 0; i < 100; i++ {    //最多等待10秒
 		if node.UserCount <= 0 { //说明这个node没有使用者了

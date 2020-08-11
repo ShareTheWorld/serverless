@@ -93,10 +93,12 @@ func Return(req *pb.ReturnContainerRequest) {
 
 	node := nc.Node
 	container := nc.Container
-	if count%100 == 0 {
-		PrintNodes("timer")
-	}
-	count++
+	//******************log*************************
+	//if count%100 == 0 {
+	//	PrintNodes("timer")
+	//}
+	//count++
+	//******************log*************************
 	actualUseMem := req.MaxMemoryUsageInBytes
 	node.Return(container, actualUseMem)
 }

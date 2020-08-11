@@ -4,7 +4,6 @@ import (
 	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
-	"time"
 )
 
 /*
@@ -57,7 +56,7 @@ func AcquireContainerHandler() {
 		//if RepeatAcquireFailCount > len(acquireQueue) { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
 		if RepeatAcquireFailCount > 1 { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
 			RepeatAcquireFailCount = 0
-			time.Sleep(time.Millisecond * 10) //重复失败一定次数，就睡眠一段时间
+			//time.Sleep(time.Millisecond * 1) //重复失败一定次数，就睡眠一段时间
 		}
 	}
 }
