@@ -27,7 +27,6 @@ type Log struct {
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
 	//st := time.Now().UnixNano()
-	req.FunctionConfig.MemoryInBytes = 1024 * 1024 * 1024
 	if req.AccountId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "account ID cannot be empty")
 	}

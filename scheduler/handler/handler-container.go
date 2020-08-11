@@ -6,6 +6,7 @@ import (
 	pb "com/aliyun/serverless/scheduler/proto"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -59,6 +60,8 @@ func CreateContainerHandler(req *pb.AcquireContainerRequest) {
 			go HandleFuncName(node, req, &wg)
 		}
 		wg.Wait()
+		randomTime := rand.Intn(60)
+		time.Sleep(time.Second * time.Duration(120+randomTime)) //睡眠一段时间再去创建第二个
 		//******************log*************************
 		//core.PrintNodes(" create container ")
 		//******************log*************************

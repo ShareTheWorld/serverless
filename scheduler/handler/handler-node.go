@@ -139,6 +139,10 @@ func SniffAllNodeAvgPress() float64 {
 	return avgPress
 }
 
+func GetStats() {
+
+}
+
 func PrintNodeStats() {
 	for {
 		time.Sleep(time.Millisecond * 10000) //没10秒打印一次node状态
