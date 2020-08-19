@@ -24,6 +24,9 @@ func ReturnContainerHandler() {
 	fmt.Println("start handle return container")
 	for {
 		req := <-returnQueue
+
+		ReturnContainerReq(req)
+		
 		core.Return(req)
 	}
 }

@@ -38,6 +38,8 @@ func AcquireContainerHandler() {
 		req := pkg.req
 		ch := pkg.ch
 
+		AcquireContainerReq(req)
+		
 		res := core.Acquire(req)
 
 		if res != nil {
@@ -46,36 +48,8 @@ func AcquireContainerHandler() {
 			continue
 		}
 
-		AddReq(req)
-
 		//如果没有请求到，就将请求放入到队列后面重新排队
 		acquireQueue <- pkg
-		RepeatAcquireFailCount++
 
-		//当失败次数大于队列的长度时，就暂停一定时间，避免空耗cpu
-		//if RepeatAcquireFailCount > len(acquireQueue) { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
-		if RepeatAcquireFailCount > 1 { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
-			RepeatAcquireFailCount = 0 //原本设计是没有事做就暂停一定时间，避免cpu空转，但是因为是四核的，不睡眠的分会更高
-			//time.Sleep(time.Millisecond * 1) //重复失败一定次数，就睡眠一段时间
-		}
 	}
 }
-
-//等待队列，凡事不能立即返回container实例的，就会放到这里面
-
-////获取等待资源的请求
-//func GetWaitFuncName() map[string]*pb.AcquireContainerRequest {
-//	FuncNameMapLock.Lock()
-//	defer FuncNameMapLock.Unlock()
-//	set := make(map[string]*pb.AcquireContainerRequest)
-//	for k, v := range FuncNameMap {
-//		set[k] = v
-//	}
-//	return set
-//}
-//
-//func LoadFinishContainer() {
-//	FuncNameMapLock.Lock()
-//	defer FuncNameMapLock.Unlock()
-//	FuncNameMap = make(map[string]*pb.AcquireContainerRequest)
-//}

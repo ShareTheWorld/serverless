@@ -32,6 +32,7 @@ const ReleasePress = 0.25                 //释放node的cpu使用率
 //[b,)只能释放资源
 
 func NodeHandler() {
+	go SyncNodeStats()
 	for {
 		size := core.GetNodeCount()
 		//(0,a)不满足最低要求，无条件直接申请资源
@@ -141,7 +142,20 @@ func SniffAllNodeAvgPress() float64 {
 
 //同步node节点的状态
 func SyncNodeStats() {
-
+	nodes := core.GetNodes()
+	var wg sync.WaitGroup
+	wg.Add(len(nodes))
+	for _, node := range nodes {
+		go func(n *core.Node) {
+			res := client.GetStats(n.Client, "")
+			if res != nil { //更新node节点的状态
+				n.UpdateNodeStats(res.NodeStats)
+				n.UpdateContainer(res.ContainerStatsList)
+			}
+			wg.Done()
+		}(node)
+	}
+	wg.Wait()
 }
 
 func PrintNodeStats() {
