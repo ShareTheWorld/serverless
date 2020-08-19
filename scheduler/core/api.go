@@ -11,6 +11,8 @@ import (
 	Acquire: 获取想要个的container
 	Return: 归还container
 */
+
+//node和container的关系结构，在申请和归还的时候会用上
 type NC struct {
 	Node      *Node
 	Container *Container

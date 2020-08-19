@@ -17,7 +17,7 @@ import (
 //const ReservePress = 100                             //申请压力
 //const ReleasePress = 0.3                             //释放压力
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 10                   //最少节点数量
+const MinNodeCount = 20                   //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
 const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
@@ -107,7 +107,7 @@ func DownNodesPress() {
 
 //嗅探所有节点平均压力
 func SniffAllNodeAvgPress() float64 {
-	if true {
+	if true { //表示固定node，使用定义的最小个数，测试时发现固定下来，分数也很不错
 		return 0.1
 	}
 	nodes := core.GetNodes()
@@ -139,6 +139,10 @@ func SniffAllNodeAvgPress() float64 {
 	return avgPress
 }
 
+//同步node节点的状态
+func SyncNodeStats() {
+
+}
 func PrintNodeStats() {
 	for {
 		time.Sleep(time.Millisecond * 10000) //没10秒打印一次node状态

@@ -14,8 +14,9 @@ import (
 	//"com/aliyun/serverless/scheduler/server"
 )
 
+//整个程序的启动入口
 func main() {
-	InitResourceMainEndpoint()
+	InitResourceMainEndpoint()           //初始化环境
 	go handler.AcquireContainerHandler() //启动容器请求处理器
 	go handler.ReturnContainerHandler()  //启动容器归还处理器
 	go handler.NodeHandler()             //启动Node管理处理器
@@ -47,11 +48,14 @@ func StartSchedulerService() {
 
 	addr := listen.Addr()
 	fmt.Println(addr.String())
+
 	//实现gRPC服务
 	s := grpc.NewServer()
+
 	//注册HelloServer为客户端提供服务
 	pb.RegisterSchedulerServer(s, new(server.Server))
 	fmt.Println("Listen on " + groble.SchedulerServerAddress)
+
 	//listen.Accept()
 	//fmt.Println("connection success ")
 	s.Serve(listen)

@@ -2,9 +2,10 @@ package core
 
 import "strconv"
 
-var DefaultMaxUsedCount int64 = 2 //Container实例的默认最大连接数
+var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
 var CollectionMaxCapacity = 1     //集合最大容量
 
+//表示一个函数实例
 //存放container信息
 type Container struct {
 	FunName      string //函数名字
@@ -15,6 +16,7 @@ type Container struct {
 	MaxUsedCount int64  //最大使用数量，会根据实际内存去计算
 }
 
+//一个collection中装的是相同的函数的实例，这里集合的概念和数学上的不一样
 //container 的一个集合
 type Collection struct {
 	FunName      string //函数名字
@@ -31,7 +33,7 @@ func (cs *Collection) AddContainer(container *Container) {
 	cs.Containers = append(cs.Containers, container)
 }
 
-//得到容器数量
+//判断集合是否还有空间装container实例
 func (cs *Collection) Lack() bool {
 	return int64(len(cs.Containers)) < cs.Capacity
 }
@@ -67,6 +69,7 @@ func (cs *Collection) Acquire(reqMem int64) *Container {
 	return container
 }
 
+//归还container实例
 func (cs *Collection) Return(container *Container, actualUseMem int64) {
 	cs.UsedCount--
 	container.UsedCount--
@@ -79,6 +82,7 @@ func (cs *Collection) Return(container *Container, actualUseMem int64) {
 	container.UsedMem = actualUseMem
 }
 
+//将collection转换为字符串，打印日志的时候需要，
 func (cs *Collection) ToString() string {
 	info := "{" + cs.FunName + ", " + str(cs.UsedCount) + "/" + str(int64(len(cs.Containers))*cs.MaxUsedCount) +
 		", " + str(cs.UsedMem/1024/1024) + "/" + str(cs.MaxUsedMem/1024/1024) + ", "

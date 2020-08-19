@@ -55,7 +55,7 @@ func AcquireContainerHandler() {
 		//当失败次数大于队列的长度时，就暂停一定时间，避免空耗cpu
 		//if RepeatAcquireFailCount > len(acquireQueue) { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
 		if RepeatAcquireFailCount > 1 { //代表队列循环了(len(acquireQueue)+1)个依然没有成功获取
-			RepeatAcquireFailCount = 0
+			RepeatAcquireFailCount = 0 //原本设计是没有事做就暂停一定时间，避免cpu空转，但是因为是四核的，不睡眠的分会更高
 			//time.Sleep(time.Millisecond * 1) //重复失败一定次数，就睡眠一段时间
 		}
 	}
