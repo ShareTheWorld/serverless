@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+//node包含节点信息，包含多个collection，每个collection是同一个函数的多个实例
+//一个函数在node中存在多个实例是为了充分利用资源
 //存放节点信息
 type Node struct {
 	lock                  sync.Mutex

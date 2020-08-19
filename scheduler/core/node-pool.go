@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-//用于存放所有node,使用内存越小的放在越后面
+//用于存放所有node
 var nodes = make([]*Node, 0, 100)
 var NodesLock sync.Mutex
 
@@ -120,6 +120,7 @@ func GetSuitableNodes(reqMap map[string]*pb.AcquireContainerRequest) map[string]
 //	return len(node.Containers)
 //}
 
+//打印node方便调试的时候查看node-pool的信息
 func PrintNodes(tag string) {
 	NodesLock.Lock()
 	defer NodesLock.Unlock()
