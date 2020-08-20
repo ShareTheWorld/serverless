@@ -13,8 +13,6 @@ import (
 	当使用率高的时候就去申请资源，
 	当使用率低的时候就释放资源
 */
-//const ReservePress = 100                             //申请压力
-//const ReleasePress = 0.3                             //释放压力
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
 const MinNodeCount = 10                   //最少节点数量
 const MaxNodeCount = 30                   //最大节点数量
@@ -23,7 +21,6 @@ const ReserveNodeStep = 4                 //发现node压力过大时，每次�
 
 const CpuReservePress = 0.5  //预定node的cpu压力
 const CpuReleasePress = 0.25 //释放node的cpu使用率
-
 const MemReservePress = 0.5  //预定node的cpu压力
 const MemReleasePress = 0.25 //释放node的cpu使用率
 
@@ -47,6 +44,7 @@ func NodeHandler() {
 	go SyncNodeStats() //启动状态同步协程
 }
 
+//管理node
 func NodeManager() {
 	for {
 		size := core.GetNodeCount()
@@ -56,7 +54,7 @@ func NodeManager() {
 			core.AddNode(node)
 			continue
 		}
-		
+
 		time.Sleep(SleepTime)
 
 		avgMemUsagePct, avgCpuUsagePct := core.CalcNodesPress() //计算节点压力
@@ -74,14 +72,14 @@ func NodeManager() {
 			if action == ActionReserveNode { //当压力达到0.7就申请一个node
 				DownNodesPress()
 			} else if action == ActionReleaseNode { //当压力小于0.4就释放一个
-				//ReleaseOneNode()
+				ReleaseOneNode()
 			}
 			continue
 		}
 
 		if size >= MaxNodeCount {
 			if action == ActionReleaseNode {
-				//ReleaseOneNode()
+				ReleaseOneNode()
 			}
 			continue
 		}
@@ -95,7 +93,7 @@ func Action(avgMemUsagePct float64, avgCpuUsagePct float64) int {
 		return 1
 	}
 	//mem和cpu两个都压力很小，就是释放node
-	if avgMemUsagePct < MemReservePress && avgCpuUsagePct < CpuReleasePress {
+	if avgMemUsagePct < MemReleasePress && avgCpuUsagePct < CpuReleasePress {
 		return 1
 	}
 	return 0
@@ -161,6 +159,18 @@ func ReserveOneNode() *core.Node {
 		fmt.Printf("---- reserve node, time=%v, node:%v \n", (et-st)/1000000, node)
 		return node
 	}
+}
+
+//释放一个Node
+func ReleaseOneNode() {
+	node := core.RemoveLastNode() //这里从node池中移除了node，就不会再分配给其他节点了
+	for i := 0; i < 100; i++ {    //最多等待30秒
+		if node.UseCount <= 0 { //说明这个node没有使用者了
+			break
+		}
+		time.Sleep(time.Millisecond * 300)
+	}
+	client.ReleaseNode("", node.NodeID)
 }
 
 //
