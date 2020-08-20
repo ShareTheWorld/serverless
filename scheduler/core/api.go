@@ -56,10 +56,10 @@ func CalcNodesPress() (float64, float64) {
 		TotalCpuUsagePct += n.CpuUsagePct
 	}
 
-	avgUsageMem := float64(TotalUsageMem) / float64(TotalTotalMem)
-	avgCpuUsagePct := TotalCpuUsagePct / float64(len(nodes))
+	avgMemUsagePct := float64(TotalUsageMem) / float64(TotalTotalMem)
+	avgCpuUsagePct := TotalCpuUsagePct / float64(len(nodes)) / 100.0
 
-	return avgUsageMem, avgCpuUsagePct
+	return avgMemUsagePct, avgCpuUsagePct
 }
 
 //得到所有的node
@@ -165,6 +165,12 @@ func RemoveContainerByContainerId(node *Node, containerId string) {
 	}
 	delete(m, container.ContainerId)
 }
+
+/*********************************** container 相关api *************************************/
+
+/*********************************** Acquire and Return 相关api *************************************/
+
+/*********************************** other 相关api *************************************/
 
 //
 ////node和container的关系结构，在申请和归还的时候会用上

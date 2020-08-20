@@ -20,16 +20,11 @@ type Container struct {
 	node *Node //所属node
 }
 
-func (c *Container) UpdateContainerStats(stats *pb.ContainerStats) {
-	if stats == nil {
-		return
-	}
-
+func (c *Container) updateContainerStats(stats *pb.ContainerStats) {
 	c.TotalMem = stats.TotalMemoryInBytes
 	c.UsageMem = stats.MemoryUsageInBytes
 	c.CpuUsagePct = stats.CpuUsagePct
 }
-
 
 //
 ////向集合中添加一个Container

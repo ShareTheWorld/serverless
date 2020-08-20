@@ -2,6 +2,7 @@ package core
 
 import (
 	pb "com/aliyun/serverless/nodeservice/proto"
+	rmpb "com/aliyun/serverless/resourcemanager/proto"
 	"sync"
 )
 
@@ -31,6 +32,24 @@ type Node struct {
 	ContainerIdMap map[string]*Container //存放所有的Container K:V=containerId:Container
 }
 
+func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
+	node := &Node{
+		NodeID:           reply.Node.Id,
+		Address:          reply.Node.Address,
+		Port:             reply.Node.NodeServicePort,
+		Client:           client,
+		TotalMem:         reply.Node.MemoryInBytes,
+		UsageMem:         1 * 1024 * 1024 * 1024,
+		AvailableMem:     3 * 1024 * 1024 * 102,
+		CpuUsagePct:      1,
+		UseCount:         0,
+		ConcurrencyCount: 1,
+		FuncNameMap:      make(map[string]*Container),
+		ContainerIdMap:   make(map[string]*Container),
+	}
+	return node
+}
+
 //更新node的状态
 func (n *Node) updateNodeStats(stats *pb.NodeStats) {
 	n.TotalMem = stats.TotalMemoryInBytes
@@ -50,7 +69,7 @@ func (n *Node) updateContainer(stats []*pb.ContainerStats) {
 		if container == nil {
 			continue
 		}
-		container.UpdateContainerStats(s)
+		container.updateContainerStats(s)
 
 	}
 }
