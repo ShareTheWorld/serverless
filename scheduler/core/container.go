@@ -1,6 +1,9 @@
 package core
 
-import pb "com/aliyun/serverless/nodeservice/proto"
+import (
+	pb "com/aliyun/serverless/nodeservice/proto"
+	"sync"
+)
 
 var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
 var CollectionMaxCapacity = 1     //集合最大容量
@@ -8,6 +11,8 @@ var CollectionMaxCapacity = 1     //集合最大容量
 //表示一个函数实例
 //存放container信息
 type Container struct {
+	lock sync.RWMutex
+
 	ContainerId string  //容器id
 	TotalMem    int64   //容器总内存
 	UsageMem    int64   //容器使用内存

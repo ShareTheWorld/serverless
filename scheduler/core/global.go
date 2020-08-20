@@ -10,3 +10,6 @@ var NodesLock sync.RWMutex
 
 var FunMap map[string]map[string]*Container
 var FuncMapLock sync.RWMutex
+
+var RequestMap map[string]*Container
+var RequestMapLock sync.Mutex
