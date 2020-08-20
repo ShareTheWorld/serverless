@@ -32,14 +32,7 @@ type Node struct {
 }
 
 //更新node的状态
-func (n *Node) UpdateNodeStats(stats *pb.NodeStats) {
-	if stats == nil {
-		return
-	}
-
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
+func (n *Node) updateNodeStats(stats *pb.NodeStats) {
 	n.TotalMem = stats.TotalMemoryInBytes
 	n.UsageMem = stats.MemoryUsageInBytes
 	n.AvailableMem = stats.AvailableMemoryInBytes
@@ -48,14 +41,7 @@ func (n *Node) UpdateNodeStats(stats *pb.NodeStats) {
 }
 
 //更新所有container的状态
-func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
-	if stats == nil {
-		return
-	}
-
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
+func (n *Node) updateContainer(stats []*pb.ContainerStats) {
 	for _, s := range stats {
 		if s == nil {
 			continue
@@ -70,44 +56,33 @@ func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
 }
 
 //添加container
-func (n *Node) AddContainer(container *Container) {
-	if container == nil {
-		return
-	}
-
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
-	n.FuncNameMap[container.FunName] = container
+func (n *Node) addContainer(container *Container) {
+	n.FuncNameMap[container.FuncName] = container
 	n.ContainerIdMap[container.ContainerId] = container
 }
 
 //根据函数名字移除container
-func (n *Node) RemoveContainerByFuncName(funcName string) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
+func (n *Node) removeContainerByFuncName(funcName string) *Container {
 	container := n.FuncNameMap[funcName]
 	if container == nil {
-		return
+		return nil
 	}
 
 	delete(n.FuncNameMap, funcName)
 	delete(n.ContainerIdMap, container.ContainerId)
+	return container
 }
 
 //根据containerId移除container
-func (n *Node) RemoveContainerByContainerId(containerId string) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
+func (n *Node) removeContainerByContainerId(containerId string) *Container {
 	container := n.ContainerIdMap[containerId]
 	if container == nil {
-		return
+		return nil
 	}
 
-	delete(n.FuncNameMap, container.FunName)
+	delete(n.FuncNameMap, container.FuncName)
 	delete(n.ContainerIdMap, containerId)
+	return container
 }
 
 //
@@ -160,7 +135,7 @@ func (n *Node) RemoveContainerByContainerId(containerId string) {
 //func (node *Node) Return(container *Container, actualUseMem int64) {
 //	node.lock.Lock()
 //	defer node.lock.Unlock()
-//	cs := node.CollectionMap[container.FunName]
+//	cs := node.CollectionMap[container.FuncName]
 //	if cs == nil {
 //		return
 //	}
@@ -179,11 +154,11 @@ func (n *Node) RemoveContainerByContainerId(containerId string) {
 //func (node *Node) AddContainer(container *Container) {
 //	node.lock.Lock()
 //	defer node.lock.Unlock()
-//	cs := node.CollectionMap[container.FunName]
+//	cs := node.CollectionMap[container.FuncName]
 //	if cs == nil {
-//		cs = &Collection{FunName: container.FunName, UsedCount: 0, UsedMem: container.UsedMem,
+//		cs = &Collection{FuncName: container.FuncName, UsedCount: 0, UsedMem: container.UsedMem,
 //			MaxUsedMem: container.MaxUsedMem, MaxUsedCount: container.MaxUsedCount, Capacity: node.CollectionMaxCapacity}
-//		node.CollectionMap[container.FunName] = cs
+//		node.CollectionMap[container.FuncName] = cs
 //	}
 //	cs.AddContainer(container)
 //}

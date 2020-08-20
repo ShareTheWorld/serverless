@@ -13,7 +13,7 @@ type Container struct {
 	UsageMem    int64   //容器使用内存
 	CpuUsagePct float64 //容器使用百分比
 
-	FunName          string //函数名字
+	FuncName         string //函数名字
 	UseCount         int64  //使用数量
 	ConcurrencyCount int64  //支持并发数量
 
@@ -88,11 +88,11 @@ func (c *Container) UpdateContainerStats(stats *pb.ContainerStats) {
 //
 ////将collection转换为字符串，打印日志的时候需要，
 //func (cs *Collection) ToString() string {
-//	info := "{" + cs.FunName + ", " + str(cs.UsedCount) + "/" + str(int64(len(cs.Containers))*cs.MaxUsedCount) +
+//	info := "{" + cs.FuncName + ", " + str(cs.UsedCount) + "/" + str(int64(len(cs.Containers))*cs.MaxUsedCount) +
 //		", " + str(cs.UsedMem/1024/1024) + "/" + str(cs.MaxUsedMem/1024/1024) + ", "
 //
 //	for _, c := range cs.Containers {
-//		//info += "[" + c.FunName + ", " + str(c.UsedCount) + ", " + str(c.UsedMem/1024/1024) + "], "
+//		//info += "[" + c.FuncName + ", " + str(c.UsedCount) + ", " + str(c.UsedMem/1024/1024) + "], "
 //		info += "[" + str(c.UsedCount) + "/" + str(c.MaxUsedCount) + ", " + str(c.UsedMem/1024/1024) + "], "
 //	}
 //	info += "}"

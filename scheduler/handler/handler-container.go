@@ -119,7 +119,7 @@ func CreateContainer(node *core.Node, req *pb.AcquireContainerRequest) *core.Con
 		}
 
 		//将container添加到node中
-		container := &core.Container{FunName: req.FunctionName, Id: reply.ContainerId,
+		container := &core.Container{FuncName: req.FunctionName, Id: reply.ContainerId,
 			MaxUsedMem: req.FunctionConfig.MemoryInBytes, MaxUsedCount: core.DefaultMaxUsedCount}
 		et := time.Now().UnixNano()
 		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", req.FunctionName, req.FunctionConfig.MemoryInBytes/1048576, (et-st)/1000000, node.NodeID)
