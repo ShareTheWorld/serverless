@@ -7,42 +7,40 @@ import (
 )
 
 var (
-	count       int64
-	waitGroup   sync.WaitGroup
-	mutexLock   sync.Mutex
-	rwMutexLock sync.RWMutex
+	count int64
+	lock  sync.RWMutex
 )
 
 func read() {
-	mutexLock.Lock()
-	//rwMutexLock.RLock()
-	time.Sleep(time.Millisecond)
-	mutexLock.Unlock()
-	//rwMutexLock.RUnlock()
-	waitGroup.Done()
+	for {
+		lock.Lock()
+		time.Sleep(time.Millisecond * 200)
+		lock.Unlock()
+	}
 }
 
 func write() {
-	//rwMutexLock.Lock()
-	mutexLock.Lock()
-	count += 1
-	time.Sleep(time.Millisecond * 10)
-	mutexLock.Unlock()
-	//rwMutexLock.Unlock()
-	waitGroup.Done()
+	st := time.Now().UnixNano()
+	for i := 0; i < 1; i++ {
+		lock.Lock()
+		time.Sleep(time.Millisecond * 1)
+		lock.Unlock()
+	}
+	et := time.Now().UnixNano()
+	diff := et - st
+	fmt.Println(diff / 1000 / 1000)
 }
 
 func main() {
-	start := time.Now()
-	for i := 0; i < 1000; i++ {
-		waitGroup.Add(1)
-		go read()
-	}
+	go read()
+	time.Sleep(time.Millisecond * 50)
+	go read()
+	time.Sleep(time.Millisecond * 50)
+	go read()
+	time.Sleep(time.Millisecond * 50)
+	go read()
 
-	for i := 0; i < 1000; i++ {
-		waitGroup.Add(1)
-		go write()
-	}
-	waitGroup.Wait()
-	fmt.Println(time.Now().Sub(start))
+	go write()
+
+	time.Sleep(time.Second * 100000)
 }

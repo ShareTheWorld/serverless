@@ -5,11 +5,14 @@ import (
 	"sync"
 )
 
-//node包含节点信息，包含多个collection，每个collection是同一个函数的多个实例
-//一个函数在node中存在多个实例是为了充分利用资源
-//存放节点信息
+//Node结构
+//锁：用于控制同步
+//连接信息
+//节点状态
+//本地使用状态
+//Container信息
 type Node struct {
-	lock sync.Mutex
+	lock sync.RWMutex
 
 	NodeID  string               //节点id
 	Address string               //节点地址
@@ -24,12 +27,19 @@ type Node struct {
 	UseCount         int64 //当前正在使用的人数
 	ConcurrencyCount int64 //并发数量
 
-	Containers map[string]*Container //存放所有的Container K:V=containerId:Container
+	FuncNameMap    map[string]*Container //存放所有的Container K:V=containerId:Container
+	ContainerIdMap map[string]*Container //存放所有的Container K:V=containerId:Container
 }
 
+//更新node的状态
 func (n *Node) UpdateNodeStats(stats *pb.NodeStats) {
+	if stats == nil {
+		return
+	}
+
 	n.lock.Lock()
 	defer n.lock.Unlock()
+
 	n.TotalMem = stats.TotalMemoryInBytes
 	n.UsageMem = stats.MemoryUsageInBytes
 	n.AvailableMem = stats.AvailableMemoryInBytes
@@ -37,27 +47,67 @@ func (n *Node) UpdateNodeStats(stats *pb.NodeStats) {
 
 }
 
+//更新所有container的状态
 func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
 	if stats == nil {
 		return
 	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
 	for _, s := range stats {
 		if s == nil {
 			continue
 		}
-		
-		container := n.Containers[s.ContainerId]
+		container := n.ContainerIdMap[s.ContainerId]
 		if container == nil {
 			continue
 		}
+		container.UpdateContainerStats(s)
 
-		container.TotalMem = s.TotalMemoryInBytes
-		container.UsageMem = s.MemoryUsageInBytes
-		container.CpuUsagePct = s.CpuUsagePct
 	}
+}
+
+//添加container
+func (n *Node) AddContainer(container *Container) {
+	if container == nil {
+		return
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	n.FuncNameMap[container.FunName] = container
+	n.ContainerIdMap[container.ContainerId] = container
+}
+
+//根据函数名字移除container
+func (n *Node) RemoveContainerByFuncName(funcName string) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	container := n.FuncNameMap[funcName]
+	if container == nil {
+		return
+	}
+
+	delete(n.FuncNameMap, funcName)
+	delete(n.ContainerIdMap, container.ContainerId)
+}
+
+//根据containerId移除container
+func (n *Node) RemoveContainerByContainerId(containerId string) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	container := n.ContainerIdMap[containerId]
+	if container == nil {
+		return
+	}
+
+	delete(n.FuncNameMap, container.FunName)
+	delete(n.ContainerIdMap, containerId)
 }
 
 //
@@ -68,6 +118,7 @@ func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
 //	node.CollectionMap = make(map[string]*Collection)
 //	return node
 //}
+
 //
 ////计算节点压力
 //func (node *Node) CalcNodePress() float64 {

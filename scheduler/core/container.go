@@ -1,5 +1,7 @@
 package core
 
+import pb "com/aliyun/serverless/nodeservice/proto"
+
 var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
 var CollectionMaxCapacity = 1     //集合最大容量
 
@@ -17,6 +19,17 @@ type Container struct {
 
 	node *Node //所属node
 }
+
+func (c *Container) UpdateContainerStats(stats *pb.ContainerStats) {
+	if stats == nil {
+		return
+	}
+
+	c.TotalMem = stats.TotalMemoryInBytes
+	c.UsageMem = stats.MemoryUsageInBytes
+	c.CpuUsagePct = stats.CpuUsagePct
+}
+
 
 //
 ////向集合中添加一个Container
