@@ -2,6 +2,9 @@ package core
 
 import "sync"
 
+/**
+全局的container
+*/
 var FunMap map[string]map[string]*Container
 var FuncMapLock sync.RWMutex
 
@@ -10,7 +13,7 @@ func AddContainer(container *Container) {
 	if container == nil {
 		return
 	}
-	
+
 	FuncMapLock.Lock()
 	defer FuncMapLock.Unlock()
 

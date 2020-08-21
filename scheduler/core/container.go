@@ -22,7 +22,7 @@ type Container struct {
 	UseCount         int64  //使用数量
 	ConcurrencyCount int64  //支持并发数量
 
-	node *Node //所属node
+	Node *Node //所属node
 }
 
 func NewContainer() {
