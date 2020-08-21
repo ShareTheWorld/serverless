@@ -29,7 +29,7 @@ func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryI
 		}
 
 		//将container添加到node中
-		container := core.Container{
+		container := &core.Container{
 			ContainerId:      reply.ContainerId,
 			TotalMem:         4 * 1024 * 1024 * 1024,
 			UsageMem:         128 * 1024 * 1024,
@@ -41,7 +41,7 @@ func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryI
 		}
 
 		node.AddContainer(container)
-		core.AddContainer(&container)
+		core.AddContainer(container)
 
 		et := time.Now().UnixNano()
 		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", funcName, memoryInBytes/1024/1024, (et-st)/1000000, node.NodeID)

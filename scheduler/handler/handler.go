@@ -3,12 +3,11 @@ package handler
 import (
 	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
-	"sync"
+	cmap "github.com/orcaman/concurrent-map"
 	"time"
 )
 
-var RequestMap = make(map[string]*core.Container)
-var RequestMapLock sync.Mutex
+var RequestMap = cmap.New()
 
 //获取一个container
 func AcquireContainer(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply {
@@ -28,9 +27,7 @@ func AcquireContainer(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply
 		}
 
 		//记录请求
-		RequestMapLock.Lock()
-		RequestMap[req.RequestId] = container
-		RequestMapLock.Unlock()
+		RequestMap.Set(req.RequestId, container)
 
 		res := &pb.AcquireContainerReply{
 			NodeId:          container.Node.NodeID,
@@ -47,9 +44,13 @@ func ReturnContainer(req *pb.ReturnContainerRequest) {
 	if req == nil {
 		return
 	}
-	container := RequestMap[req.RequestId]
-	if container == nil {
+	obj, _ := RequestMap.Get(req.RequestId)
+	if obj == nil {
 		return
 	}
+	container := obj.(*core.Container)
+
+	RequestMap.Remove(req.RequestId)
+	
 	core.Return(container, req.MaxMemoryUsageInBytes, req.DurationInNanos)
 }
