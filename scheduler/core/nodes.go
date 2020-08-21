@@ -1,6 +1,9 @@
 package core
 
-import "sync"
+import (
+	"math/rand"
+	"sync"
+)
 
 //用于存放所有node
 var nodes = make([]*Node, 0, 100)
@@ -70,18 +73,23 @@ func GetNodes() []*Node {
 	return ns
 }
 
-//根据函数名字和需要内存获取n个node,返回的个数小于等于n
-func GetSuitableNodes(funcName string, reqMem int64, n int) []*Node {
-	Lock.Lock()
-	defer Lock.Unlock()
-	//size := len(nodes)
-	//s := rand.Intn(size)
-	//resMap := make(map[string]*Node)
-	//for k, _ := range reqMap {
-	//	i := s % size
-	//	resMap[k] = nodes[i]
-	//	s++
-	//}
-	//return resMap
-	return nil
+//得到一个合适的node
+func GetSuitableNode(funcName string, reqMem int64) *Node {
+	Lock.RLock()
+	defer Lock.RUnlock()
+	size := len(nodes)
+	s := rand.Intn(size)
+	var node *Node
+	for i := 0; i < size; i++ {
+		n := nodes[(s+i)%size]
+		if node == nil {
+			node = n
+			continue
+		}
+		if n.AvailableMem > node.AvailableMem {
+			node = n
+		}
+	}
+	node.AvailableMem -= 128 * 1024 * 1024 //减少一点可用内存，避免下次再选中它，状态同步任务最后会自动修复它
+	return node
 }

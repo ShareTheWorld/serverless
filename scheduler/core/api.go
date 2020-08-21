@@ -57,6 +57,10 @@ func Return(container *Container, usageMem int64, runTime int64) {
 	if container == nil {
 		return
 	}
+	
+	container.Node.lock.Lock()
+	defer container.Node.lock.Unlock()
+
 	container.ConcurrencyCount = 2 * 1024 * 1024 * 1024 / usageMem
 	container.UseCount--
 	container.Node.UseCount--

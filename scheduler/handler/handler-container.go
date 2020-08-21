@@ -1,9 +1,54 @@
 package handler
 
 import (
+	"com/aliyun/serverless/scheduler/client"
+	"com/aliyun/serverless/scheduler/core"
 	pb "com/aliyun/serverless/scheduler/proto"
+	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"sync"
+	"time"
 )
+
+//异步创建容器
+func AsyncCreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
+	go CreateContainer(funcName, handler, timeoutInMs, memoryInBytes)
+
+}
+func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
+	node := core.GetSuitableNode(funcName, memoryInBytes)
+
+	st := time.Now().UnixNano()
+	for {
+		//创建一个container
+		reply, err := client.CreateContainer(node.Client, uuid.NewV4().String(), funcName+uuid.NewV4().String(),
+			funcName, handler, timeoutInMs, memoryInBytes)
+
+		if err != nil {
+			fmt.Printf("FuncName:%v, Mem:%v, error: %v", funcName, memoryInBytes/1048576, err)
+			return
+		}
+
+		//将container添加到node中
+		container := &core.Container{
+			ContainerId:      reply.ContainerId,
+			TotalMem:         4 * 1024 * 1024 * 1024,
+			UsageMem:         128 * 1024 * 1024,
+			CpuUsagePct:      0,
+			FuncName:         funcName,
+			UseCount:         0,
+			ConcurrencyCount: 1,
+			Node:             node,
+		}
+
+		node.AddContainer(container)
+		core.AddContainer(container)
+		
+		et := time.Now().UnixNano()
+		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", funcName, memoryInBytes/1024/1024, (et-st)/1000000, node.NodeID)
+	}
+
+}
 
 //
 //import (
@@ -46,16 +91,17 @@ var FuncNameMapLock sync.Mutex
 //	FuncNameMapLock.Unlock()
 //}
 
-//复制一份出来
-func GetReq() map[string]*pb.AcquireContainerRequest {
-	tmp := make(map[string]*pb.AcquireContainerRequest) // New empty set
-	FuncNameMapLock.Lock()
-	for k, v := range FuncNameMap {
-		tmp[k] = v
-	}
-	FuncNameMapLock.Unlock()
-	return tmp
-}
+////复制一份出来
+//func GetReq() map[string]*pb.AcquireContainerRequest {
+//	tmp := make(map[string]*pb.AcquireContainerRequest) // New empty set
+//	FuncNameMapLock.Lock()
+//	for k, v := range FuncNameMap {
+//		tmp[k] = v
+//	}
+//	FuncNameMapLock.Unlock()
+//	return tmp
+//}
+
 //
 //func CreateContainerHandler(req *pb.AcquireContainerRequest) {
 //	nodes := core.GetNodes()
