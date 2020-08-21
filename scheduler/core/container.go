@@ -8,6 +8,8 @@ import (
 var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
 var CollectionMaxCapacity = 1     //集合最大容量
 
+
+
 //表示一个函数实例
 //存放container信息
 type Container struct {
@@ -23,6 +25,10 @@ type Container struct {
 	ConcurrencyCount int64  //支持并发数量
 
 	node *Node //所属node
+}
+
+func NewContainer() {
+
 }
 
 func (c *Container) updateContainerStats(stats *pb.ContainerStats) {

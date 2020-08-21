@@ -109,8 +109,8 @@ func SyncNodeStats() {
 			go func(n *core.Node) {
 				res := client.GetStats(n.Client, "")
 				if res != nil { //更新node节点的状态
-					core.UpdateNodeStats(n, res.NodeStats)
-					core.UpdateContainer(n, res.ContainerStatsList)
+					n.UpdateNodeStats(res.NodeStats)
+					n.UpdateContainer(res.ContainerStatsList)
 				}
 				wg.Done()
 			}(node)

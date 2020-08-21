@@ -7,11 +7,7 @@ import (
 )
 
 //Node结构
-//锁：用于控制同步
-//连接信息
-//节点状态
-//本地使用状态
-//Container信息
+//锁：用于控制同步 ,连接信息 ,节点状态 ,本地使用状态 ,Container信息
 type Node struct {
 	lock sync.RWMutex
 
@@ -28,7 +24,6 @@ type Node struct {
 	UseCount         int64 //当前正在使用的人数
 	ConcurrencyCount int64 //并发数量
 
-	FuncNameMap    map[string]*Container //存放所有的Container K:V=containerId:Container
 	ContainerIdMap map[string]*Container //存放所有的Container K:V=containerId:Container
 }
 
@@ -44,14 +39,20 @@ func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
 		CpuUsagePct:      1,
 		UseCount:         0,
 		ConcurrencyCount: 1,
-		FuncNameMap:      make(map[string]*Container),
 		ContainerIdMap:   make(map[string]*Container),
 	}
 	return node
 }
 
 //更新node的状态
-func (n *Node) updateNodeStats(stats *pb.NodeStats) {
+func (n *Node) UpdateNodeStats(stats *pb.NodeStats) {
+	if stats == nil {
+		return
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
 	n.TotalMem = stats.TotalMemoryInBytes
 	n.UsageMem = stats.MemoryUsageInBytes
 	n.AvailableMem = stats.AvailableMemoryInBytes
@@ -60,7 +61,14 @@ func (n *Node) updateNodeStats(stats *pb.NodeStats) {
 }
 
 //更新所有container的状态
-func (n *Node) updateContainer(stats []*pb.ContainerStats) {
+func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
+	if stats == nil {
+		return
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
 	for _, s := range stats {
 		if s == nil {
 			continue
@@ -70,36 +78,27 @@ func (n *Node) updateContainer(stats []*pb.ContainerStats) {
 			continue
 		}
 		container.updateContainerStats(s)
-
 	}
 }
 
 //添加container
-func (n *Node) addContainer(container *Container) {
-	n.FuncNameMap[container.FuncName] = container
+func (n *Node) AddContainer(container *Container) {
+	if container == nil {
+		return
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
 	n.ContainerIdMap[container.ContainerId] = container
 }
 
-//根据函数名字移除container
-func (n *Node) removeContainerByFuncName(funcName string) *Container {
-	container := n.FuncNameMap[funcName]
-	if container == nil {
-		return nil
-	}
+//根据containerId移除container  TODO 需要在全局中移除
+func (n *Node) RemoveContainer(containerId string) *Container {
+	n.lock.Lock()
+	defer n.lock.Unlock()
 
-	delete(n.FuncNameMap, funcName)
-	delete(n.ContainerIdMap, container.ContainerId)
-	return container
-}
-
-//根据containerId移除container
-func (n *Node) removeContainerByContainerId(containerId string) *Container {
 	container := n.ContainerIdMap[containerId]
-	if container == nil {
-		return nil
-	}
-
-	delete(n.FuncNameMap, container.FuncName)
 	delete(n.ContainerIdMap, containerId)
 	return container
 }
