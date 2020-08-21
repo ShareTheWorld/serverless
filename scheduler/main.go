@@ -17,8 +17,8 @@ import (
 //整个程序的启动入口
 func main() {
 	InitResourceMainEndpoint()           //初始化环境
-	go handler.AcquireContainerHandler() //启动容器请求处理器
-	go handler.ReturnContainerHandler()  //启动容器归还处理器
+	//go handler.AcquireContainerHandler() //启动容器请求处理器
+	//go handler.ReturnContainerHandler()  //启动容器归还处理器
 	go handler.NodeHandler()             //启动Node管理处理器
 	//go handler.ContainerHandler()        //启动容器处理器,不用启动了,会有触发器去触发创建函数
 	client.ConnectResourceManagerService(groble.ResourceManagerEndpoint)

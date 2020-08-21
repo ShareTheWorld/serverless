@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var RequestMap map[string]*core.Container
+var RequestMap = make(map[string]*core.Container)
 var RequestMapLock sync.Mutex
 
 //获取一个container

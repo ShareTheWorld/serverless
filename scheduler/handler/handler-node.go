@@ -59,6 +59,7 @@ func NodeManager() {
 
 		avgMemUsagePct, avgCpuUsagePct := core.CalcNodesPress() //计算节点压力
 		action := Action(avgMemUsagePct, avgCpuUsagePct)
+		
 		//[a,a]只能申请资源
 		if size == MinNodeCount {
 			if action == ActionReserveNode {

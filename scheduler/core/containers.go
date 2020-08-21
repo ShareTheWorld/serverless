@@ -5,7 +5,7 @@ import "sync"
 /**
 全局的container
 */
-var FunMap map[string]map[string]*Container
+var FunMap = make(map[string]map[string]*Container)
 var FuncMapLock sync.RWMutex
 
 //添加container
