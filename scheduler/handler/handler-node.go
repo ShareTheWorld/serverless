@@ -14,14 +14,14 @@ import (
 	当使用率低的时候就释放资源
 */
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 20                   //最少节点数量
+const MinNodeCount = 5                    //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
-const ReserveNodeStep = 4                 //发现node压力过大时，每次申请多少个node
+const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
 
-const CpuReservePress = 0.5  //预定node的cpu压力
+const CpuReservePress = 0.6  //预定node的cpu压力
 const CpuReleasePress = 0.25 //释放node的cpu使用率
-const MemReservePress = 0.5  //预定node的cpu压力
+const MemReservePress = 0.7  //预定node的cpu压力
 const MemReleasePress = 0.25 //释放node的cpu使用率
 
 const NodeStatusSyncFrequency = 50 //node状态同步频率每秒多少次
