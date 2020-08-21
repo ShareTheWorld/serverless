@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 )
@@ -92,4 +93,17 @@ func GetSuitableNode(funcName string, reqMem int64) *Node {
 	}
 	node.AvailableMem -= 128 * 1024 * 1024 //减少一点可用内存，避免下次再选中它，状态同步任务最后会自动修复它
 	return node
+}
+
+func PrintNodes(tag string) {
+	Lock.RLock()
+	defer Lock.RUnlock()
+	size := len(nodes)
+	fmt.Printf("*******************************%v**************************", tag)
+	for i := 0; i < size; i++ {
+		node := nodes[i]
+		fmt.Println(node)
+	}
+	fmt.Printf("*******************************%v**************************", tag)
+
 }

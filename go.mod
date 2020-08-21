@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
-	github.com/orcaman/concurrent-map v0.0.0-20160823150647-8bf1e9bacbf6 // indirect
+	github.com/orcaman/concurrent-map v0.0.0-20160823150647-8bf1e9bacbf6
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.1.0

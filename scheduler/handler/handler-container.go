@@ -13,7 +13,6 @@ import (
 //异步创建容器
 func AsyncCreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
 	go CreateContainer(funcName, handler, timeoutInMs, memoryInBytes)
-
 }
 func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
 	node := core.GetSuitableNode(funcName, memoryInBytes)
@@ -22,7 +21,7 @@ func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryI
 	for {
 		//创建一个container
 		reply, err := client.CreateContainer(node.Client, uuid.NewV4().String(), funcName+uuid.NewV4().String(),
-			funcName, handler, timeoutInMs, memoryInBytes)
+			funcName, handler, timeoutInMs, 4*1024*1024*1024)
 
 		if err != nil {
 			fmt.Printf("FuncName:%v, Mem:%v, error: %v", funcName, memoryInBytes/1048576, err)
@@ -30,22 +29,23 @@ func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryI
 		}
 
 		//将container添加到node中
-		container := &core.Container{
+		container := core.Container{
 			ContainerId:      reply.ContainerId,
 			TotalMem:         4 * 1024 * 1024 * 1024,
 			UsageMem:         128 * 1024 * 1024,
 			CpuUsagePct:      0,
 			FuncName:         funcName,
 			UseCount:         0,
-			ConcurrencyCount: 1,
+			ConcurrencyCount: 2,
 			Node:             node,
 		}
 
 		node.AddContainer(container)
-		core.AddContainer(container)
-		
+		core.AddContainer(&container)
+
 		et := time.Now().UnixNano()
 		fmt.Printf("create container,FuncName:%v, Mem:%v, time=%v, nodeId=%v\n", funcName, memoryInBytes/1024/1024, (et-st)/1000000, node.NodeID)
+		return
 	}
 
 }

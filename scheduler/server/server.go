@@ -1,11 +1,13 @@
 package server
 
 import (
+	"com/aliyun/serverless/scheduler/core"
 	//"com/aliyun/serverless/scheduler/core"
 	"com/aliyun/serverless/scheduler/handler"
 	pb "com/aliyun/serverless/scheduler/proto"
 	"context"
 	"fmt"
+	"time"
 
 	//"fmt"
 	"google.golang.org/grpc/codes"
@@ -28,6 +30,7 @@ type Log struct {
 }
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
+	st := time.Now().UnixNano()
 	req.FunctionConfig.MemoryInBytes = 4 * 1024 * 1024 * 1024
 	if req.AccountId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "account ID cannot be empty")
@@ -42,17 +45,23 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
 	}
-
+	et := time.Now().UnixNano()
+	fmt.Println((et - st) / 1000 / 1000)
 	return res, nil
 }
+
+var count = 0
 
 func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
 
 	handler.ReturnContainer(req)
-
+	count++
+	if count%100 == 0 {
+		core.PrintNodes(" error ")
+	}
 	if req.ErrorMessage != "" {
 		fmt.Println(req.ErrorMessage)
-		//core.PrintNodes(" error ")
+		core.PrintNodes(" error ")
 	}
 	return &pb.ReturnContainerReply{}, nil
 }

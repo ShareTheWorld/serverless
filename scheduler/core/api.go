@@ -13,13 +13,16 @@ func Acquire(funcName string) *Container {
 	Lock.Lock()
 	defer Lock.Unlock()
 
-	m := FunMap[funcName]
-	if m == nil { //说明没有这个函数
+	containerMap := GetContainerMap(funcName)
+	if containerMap == nil { //说明没有这个函数
 		return nil
 	}
 
+	keys := containerMap.Keys()
 	//挑选一个最优的container
-	for _, c := range m {
+	for _, k := range keys {
+		obj, _ := containerMap.Get(k)
+		c := obj.(*Container)
 		if c.UseCount >= c.ConcurrencyCount {
 			continue
 		}
@@ -57,7 +60,7 @@ func Return(container *Container, usageMem int64, runTime int64) {
 	if container == nil {
 		return
 	}
-	
+
 	container.Node.lock.Lock()
 	defer container.Node.lock.Unlock()
 

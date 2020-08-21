@@ -24,7 +24,7 @@ type Node struct {
 	UseCount         int64 //当前正在使用的人数
 	ConcurrencyCount int64 //并发数量
 
-	ContainerIdMap map[string]*Container //存放所有的Container K:V=containerId:Container
+	ContainerIdMap map[string]Container //存放所有的Container K:V=containerId:Container
 }
 
 func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
@@ -39,7 +39,7 @@ func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
 		CpuUsagePct:      1,
 		UseCount:         0,
 		ConcurrencyCount: 1,
-		ContainerIdMap:   make(map[string]*Container),
+		ContainerIdMap:   make(map[string]Container),
 	}
 	return node
 }
@@ -74,19 +74,15 @@ func (n *Node) UpdateContainer(stats []*pb.ContainerStats) {
 			continue
 		}
 		container := n.ContainerIdMap[s.ContainerId]
-		if container == nil {
-			continue
-		}
+		//if container == nil {
+		//	continue
+		//}
 		container.updateContainerStats(s)
 	}
 }
 
 //添加container
-func (n *Node) AddContainer(container *Container) {
-	if container == nil {
-		return
-	}
-
+func (n *Node) AddContainer(container Container) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -94,7 +90,7 @@ func (n *Node) AddContainer(container *Container) {
 }
 
 //根据containerId移除container  TODO 需要在全局中移除
-func (n *Node) RemoveContainer(containerId string) *Container {
+func (n *Node) RemoveContainer(containerId string) Container {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 

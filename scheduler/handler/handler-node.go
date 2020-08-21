@@ -14,8 +14,8 @@ import (
 	当使用率低的时候就释放资源
 */
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 10                   //最少节点数量
-const MaxNodeCount = 30                   //最大节点数量
+const MinNodeCount = 20                   //最少节点数量
+const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
 const ReserveNodeStep = 4                 //发现node压力过大时，每次申请多少个node
 
@@ -59,7 +59,7 @@ func NodeManager() {
 
 		avgMemUsagePct, avgCpuUsagePct := core.CalcNodesPress() //计算节点压力
 		action := Action(avgMemUsagePct, avgCpuUsagePct)
-		
+
 		//[a,a]只能申请资源
 		if size == MinNodeCount {
 			if action == ActionReserveNode {

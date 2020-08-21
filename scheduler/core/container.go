@@ -5,9 +5,6 @@ import (
 	"sync"
 )
 
-var DefaultMaxUsedCount int64 = 1 //Container实例的默认最大连接数
-var CollectionMaxCapacity = 1     //集合最大容量
-
 //表示一个函数实例
 //存放container信息
 type Container struct {

@@ -31,7 +31,7 @@ func write() {
 	fmt.Println(diff / 1000 / 1000)
 }
 
-func main() {
+func main1() {
 	go read()
 	time.Sleep(time.Millisecond * 50)
 	go read()
