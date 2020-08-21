@@ -23,10 +23,12 @@ func (s NodeService) Reserve(ctx context.Context, in *pb.ReserveRequest) (*pb.Re
 
 //创建容器
 func (s NodeService) CreateContainer(ctx context.Context, in *pb.CreateContainerRequest) (*pb.CreateContainerReply, error) {
-	fmt.Printf("call function: NodeService.CreateContainer, %v\n", in)
+	st := time.Now().UnixNano()
 	time.Sleep(time.Millisecond * 500)
 	res := new(pb.CreateContainerReply)
 	res.ContainerId = uuid.NewV4().String()
+	et := time.Now().UnixNano()
+	fmt.Printf("time: %v, call function: NodeService.CreateContainer, %v\n", (et-st)/1000/1000, in)
 	return res, nil
 }
 
@@ -57,7 +59,7 @@ func (s NodeService) InvokeFunction(req *pb.InvokeFunctionRequest, res pb.NodeSe
 
 //得到容器状态
 func (s NodeService) GetStats(ctx context.Context, in *pb.GetStatsRequest) (*pb.GetStatsReply, error) {
-	fmt.Printf("call function: NodeService.GetStats, %v\n", in)
+	//fmt.Printf("call function: NodeService.GetStats, %v\n", in)
 	res := new(pb.GetStatsReply)
 	res.NodeStats = &pb.NodeStats{TotalMemoryInBytes: 3 * 1024 * 1024 * 1024, MemoryUsageInBytes: 128 * 1024 * 1024, CpuUsagePct: 70}
 	return res, nil

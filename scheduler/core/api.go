@@ -10,8 +10,8 @@ package core
 func Acquire(funcName string) *Container {
 	var container *Container
 
-	Lock.Lock()
-	defer Lock.Unlock()
+	//Lock.Lock()
+	//defer Lock.Unlock()
 
 	containerMap := GetContainerMap(funcName)
 	if containerMap == nil { //说明没有这个函数
@@ -49,8 +49,10 @@ func Acquire(funcName string) *Container {
 	}
 
 	//修改container的使用情况
+	container.Node.lock.Lock()
 	container.UseCount++
 	container.Node.UseCount++
+	container.Node.lock.Unlock()
 
 	return container
 }
