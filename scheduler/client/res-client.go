@@ -45,9 +45,12 @@ func ReserveNode(requestId string, accountId string) (*resPb.ReserveNodeReply, e
 func ReleaseNode(requestId string, id string) *resPb.ReleaseNodeReply {
 	req := resPb.ReleaseNodeRequest{RequestId: requestId, Id: id}
 	res, err := resClient.ReleaseNode(context.Background(), &req)
+
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("release node: requestId:%v, id:%v \n", requestId, id)
+
 	return res
 }
 
