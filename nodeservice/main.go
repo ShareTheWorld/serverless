@@ -57,11 +57,19 @@ func (s NodeService) InvokeFunction(req *pb.InvokeFunctionRequest, res pb.NodeSe
 	return nil
 }
 
+var st = time.Now().UnixNano()
+
 //得到容器状态
 func (s NodeService) GetStats(ctx context.Context, in *pb.GetStatsRequest) (*pb.GetStatsReply, error) {
 	//fmt.Printf("call function: NodeService.GetStats, %v\n", in)
+	ct := time.Now().UnixNano()
+	var pct float64 = 10
+	min := ((ct - st) / 1000 / 1000 / 1000 / 60) % 2 //0min 10%  1min 70%  2min 10%
+	if min == 1 {                                    //一分钟过后，cpu的使用率提高到70
+		pct = 70
+	}
 	res := new(pb.GetStatsReply)
-	res.NodeStats = &pb.NodeStats{TotalMemoryInBytes: 3 * 1024 * 1024 * 1024, MemoryUsageInBytes: 128 * 1024 * 1024, CpuUsagePct: 7}
+	res.NodeStats = &pb.NodeStats{TotalMemoryInBytes: 3 * 1024 * 1024 * 1024, MemoryUsageInBytes: 128 * 1024 * 1024, CpuUsagePct: pct}
 	return res, nil
 }
 

@@ -15,9 +15,13 @@ type Container struct {
 	UsageMem    int64   //容器使用内存
 	CpuUsagePct float64 //容器使用百分比
 
-	FuncName         string //函数名字
-	UseCount         int64  //使用数量
-	ConcurrencyCount int64  //支持并发数量
+	FuncName      string //函数名字
+	Handler       string
+	TimeoutInMs   int64
+	MemoryInBytes int64
+
+	UseCount         int64 //使用数量
+	ConcurrencyCount int64 //支持并发数量
 
 	Node *Node `json:"-"` //所属node
 }

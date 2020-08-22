@@ -135,6 +135,29 @@ func DownNodesPress() {
 		core.AddNode(node) //必须先添加，否则后面的计算node压力时，统计不到新增节点
 		fmt.Println(node)
 	}
+
+	//转移高压函数
+	go CreateHighPressureFunction(30*1000, 4*ReserveNodeStep)
+}
+
+//创建高压函数，到其他节点上去
+func CreateHighPressureFunction(runTime int, funcCount int) {
+	for i := 0; i < runTime/100; i++ {
+		ctn := core.GetFuncByMaxCpu()
+		if ctn == nil {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+		b := CreateContainer(ctn.FuncName, ctn.Handler, ctn.TimeoutInMs, ctn.MemoryInBytes)
+		if !b {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+		funcCount--
+		if funcCount <= 0 {
+			break
+		}
+	}
 }
 
 //这个方法需要保证一定要申请一个Node
@@ -175,25 +198,3 @@ func ReleaseOneNode() {
 	}
 	client.ReleaseNode("", node.NodeID)
 }
-
-//
-//func PrintNodeStats() {
-//	for {
-//		time.Sleep(time.Millisecond * 10000) //没10秒打印一次node状态
-//		nodes := core.GetNodes()
-//		//******************log*************************
-//		//core.PrintNodes("local node status")
-//		//******************log*************************
-//		fmt.Printf("****************************%v*******************************\n", "remote node stats")
-//		for _, n := range nodes {
-//			reply := client.GetStats(n.Client, "")
-//			jsonStr, err := json.Marshal(reply)
-//			if err != nil {
-//				fmt.Println(err)
-//				continue
-//			}
-//			fmt.Println(string(jsonStr))
-//		}
-//		fmt.Printf("**************************************************************\n\n")
-//	}
-//}
