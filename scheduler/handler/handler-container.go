@@ -39,7 +39,7 @@ func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryI
 			CpuUsagePct:      0,
 			FuncName:         funcName,
 			UseCount:         0,
-			ConcurrencyCount: 2,
+			ConcurrencyCount: 4,
 			Node:             node,
 		}
 

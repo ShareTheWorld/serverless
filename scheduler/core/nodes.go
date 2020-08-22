@@ -58,6 +58,7 @@ func CalcNodesPress() (float64, float64) {
 		TotalCpuUsagePct += n.CpuUsagePct
 	}
 
+	//fmt.Printf("calc press: TotalTotalMem:%v, TotalUsageMem:%v, TotalCpuUsagePct:%v\n", TotalTotalMem, TotalUsageMem, TotalCpuUsagePct)
 	avgMemUsagePct := float64(TotalUsageMem) / float64(TotalTotalMem)
 	avgCpuUsagePct := TotalCpuUsagePct / float64(len(nodes)) / 100.0
 

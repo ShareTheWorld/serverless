@@ -7,8 +7,6 @@ import (
 	pb "com/aliyun/serverless/scheduler/proto"
 	"context"
 	"fmt"
-	"time"
-
 	//"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +28,7 @@ type Log struct {
 }
 
 func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRequest) (*pb.AcquireContainerReply, error) {
-	st := time.Now().UnixNano()
+	//st := time.Now().UnixNano()
 	req.FunctionConfig.MemoryInBytes = 4 * 1024 * 1024 * 1024
 	if req.AccountId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "account ID cannot be empty")
@@ -45,8 +43,8 @@ func (s Server) AcquireContainer(ctx context.Context, req *pb.AcquireContainerRe
 	if res == nil {
 		return &pb.AcquireContainerReply{}, nil
 	}
-	et := time.Now().UnixNano()
-	fmt.Println((et - st) / 1000 / 1000)
+	//et := time.Now().UnixNano()
+	//fmt.Println((et - st) / 1000 / 1000)
 	return res, nil
 }
 
@@ -56,7 +54,7 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 
 	handler.ReturnContainer(req)
 	count++
-	if count%100 == 0 {
+	if count%1000 == 0 {
 		core.PrintNodes(" timer ")
 	}
 	if req.ErrorMessage != "" {
