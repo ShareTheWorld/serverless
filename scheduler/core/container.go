@@ -34,4 +34,10 @@ func (c *Container) updateContainerStats(stats *pb.ContainerStats) {
 	c.TotalMem = stats.TotalMemoryInBytes
 	c.UsageMem = stats.MemoryUsageInBytes
 	c.CpuUsagePct = stats.CpuUsagePct
+
+	//如果cpu使用大于30%，那么就把这个函数定义为cpu型函数
+	if stats.CpuUsagePct > 30 {
+		CpuFunc.Set(c.FuncName, c)
+	}
+
 }

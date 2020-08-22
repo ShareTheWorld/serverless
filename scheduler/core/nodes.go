@@ -119,3 +119,32 @@ func PrintNodes(tag string) {
 	fmt.Printf("*******************************%v**************************\n", tag)
 
 }
+
+
+
+//
+////计算nodes的压力,返回内存和cpu的使用
+//func CalcNodesPress() (float64, float64) {
+//	Lock.RLock()
+//	defer Lock.RUnlock()
+//
+//	var TotalTotalMem int64
+//	var TotalUsageMem int64
+//	//var TotalCpuUsagePct float64
+//	var MaxCpuUseAgePct float64
+//
+//	for _, n := range nodes {
+//		TotalTotalMem += n.TotalMem
+//		TotalUsageMem += n.UsageMem
+//		if n.CpuUsagePct > MaxCpuUseAgePct {
+//			MaxCpuUseAgePct = n.CpuUsagePct
+//		}
+//	}
+//
+//	//fmt.Printf("calc press: TotalTotalMem:%v, TotalUsageMem:%v, TotalCpuUsagePct:%v\n", TotalTotalMem, TotalUsageMem, TotalCpuUsagePct)
+//	avgMemUsagePct := float64(TotalUsageMem) / float64(TotalTotalMem)
+//	//avgCpuUsagePct := TotalCpuUsagePct / float64(len(nodes)) / 100.0
+//	avgCpuUsagePct := MaxCpuUseAgePct / 100.0 //把最大值作为cpu的平局值
+//
+//	return avgMemUsagePct, avgCpuUsagePct
+//}

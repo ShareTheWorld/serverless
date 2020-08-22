@@ -10,18 +10,17 @@ import (
 	"time"
 )
 
-//异步创建容器
-func AsyncCreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
-	go CreateContainer(funcName, handler, timeoutInMs, memoryInBytes)
-}
-
 //创建一个容器，成功返回true，失败或者已经存在返回false
 func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) bool {
 	node := core.GetSuitableNode(funcName, memoryInBytes)
 	if node == nil {
 		return false
 	}
+	b := CreateContainerForNode(node, funcName, handler, timeoutInMs, memoryInBytes)
+	return b
+}
 
+func CreateContainerForNode(node *core.Node, funcName string, handler string, timeoutInMs int64, memoryInBytes int64) bool {
 	st := time.Now().UnixNano()
 	for {
 		//创建一个container

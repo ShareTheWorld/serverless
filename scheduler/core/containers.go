@@ -10,6 +10,9 @@ import (
 var FunCtnMap = cmap.New() //function_name -> ContainerMap (container_id -> ContainerInfo)
 //var FuncMapLock sync.RWMutex
 
+//记录cpu型函数
+var CpuFunc = cmap.New()
+
 //添加container
 func AddContainer(container *Container) {
 	if container == nil {
@@ -46,6 +49,21 @@ func GetContainerMap(funcName string) cmap.ConcurrentMap {
 	}
 	containerMap := obj.(cmap.ConcurrentMap) //转为对应的map
 	return containerMap
+}
+
+//得到cpu密集型函数
+func GetCpuContainer() []*Container {
+	var cs = make([]*Container, 0, 100)
+	keys := CpuFunc.Keys()
+	for _, fn := range keys {
+		obj, _ := CpuFunc.Get(fn)
+		if obj == nil {
+			continue
+		}
+		c := obj.(*Container)
+		cs = append(cs, c)
+	}
+	return cs
 }
 
 //获取内存使用最多的函数

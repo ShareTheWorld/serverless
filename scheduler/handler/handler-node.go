@@ -14,15 +14,16 @@ import (
 	当使用率低的时候就释放资源
 */
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 5                    //最少节点数量
+const MinNodeCount = 10                   //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
 const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
 
 const CpuReservePress = 0.6  //预定node的cpu压力
-const CpuReleasePress = 0.25 //释放node的cpu使用率
-const MemReservePress = 0.7  //预定node的cpu压力
-const MemReleasePress = 0.25 //释放node的cpu使用率
+const CpuReleasePress = 0.25 //释放node的cpu压力
+
+const MemReservePress = 0.7  //预定node的mem压力
+const MemReleasePress = 0.25 //释放node的mem压力
 
 const NodeStatusSyncFrequency = 50 //node状态同步频率每秒多少次
 
@@ -54,9 +55,7 @@ func NodeManager() {
 			core.AddNode(node)
 			continue
 		}
-		//if true { //TODO 只是为了固定容器的个数
-		//	return
-		//}
+
 		time.Sleep(SleepTime)
 
 		avgMemUsagePct, avgCpuUsagePct := core.CalcNodesPress() //计算节点压力
@@ -125,6 +124,7 @@ func SyncNodeStats() {
 
 //减少node的压力
 func DownNodesPress() {
+	containers := core.GetCpuContainer()
 	//每次添加指定步长的node，但是不能超过总量
 	for i := 0; i < ReserveNodeStep; i++ {
 		size := core.GetNodeCount()
@@ -134,10 +134,19 @@ func DownNodesPress() {
 		node := ReserveOneNode()
 		core.AddNode(node) //必须先添加，否则后面的计算node压力时，统计不到新增节点
 		fmt.Println(node)
+		go CreateCpuFunction(node, containers)
 	}
 
 	//转移高压函数
-	go CreateHighPressureFunction(30*1000, 4*ReserveNodeStep)
+	//go CreateHighPressureFunction(30*1000, 4*ReserveNodeStep)
+}
+
+//创建cpu型函数
+func CreateCpuFunction(node *core.Node, containers []*core.Container) {
+	//得到cpu密集型函数
+	for _, ctn := range containers {
+		go CreateContainerForNode(node, ctn.FuncName, ctn.Handler, ctn.TimeoutInMs, ctn.MemoryInBytes)
+	}
 }
 
 //创建高压函数，到其他节点上去

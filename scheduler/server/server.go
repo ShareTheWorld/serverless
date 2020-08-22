@@ -50,7 +50,6 @@ var count = 0
 
 func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequest) (*pb.ReturnContainerReply, error) {
 
-	handler.ReturnContainer(req)
 	count++
 	if count%1000 == 0 {
 		core.PrintNodes(" timer ")
@@ -59,5 +58,8 @@ func (s Server) ReturnContainer(ctx context.Context, req *pb.ReturnContainerRequ
 		fmt.Println(req.ErrorMessage)
 		core.PrintNodes(" error ")
 	}
+
+	handler.ReturnContainer(req)
+
 	return &pb.ReturnContainerReply{}, nil
 }

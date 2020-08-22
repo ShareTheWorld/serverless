@@ -18,7 +18,7 @@ func AcquireContainer(req *pb.AcquireContainerRequest) *pb.AcquireContainerReply
 		if container == nil {
 			if !isTriggerCreateContainer { //如果没有触发创建容器，就去创建容器
 				isTriggerCreateContainer = true
-				AsyncCreateContainer(req.FunctionName, req.FunctionConfig.Handler,
+				go CreateContainer(req.FunctionName, req.FunctionConfig.Handler,
 					req.FunctionConfig.TimeoutInMs, req.FunctionConfig.MemoryInBytes)
 			}
 			//触发缺失
@@ -51,6 +51,6 @@ func ReturnContainer(req *pb.ReturnContainerRequest) {
 	container := obj.(*core.Container)
 
 	RequestMap.Remove(req.RequestId)
-	
+
 	core.Return(container, req.MaxMemoryUsageInBytes, req.DurationInNanos)
 }
