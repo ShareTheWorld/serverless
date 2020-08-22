@@ -14,7 +14,7 @@ type Node struct {
 	NodeID  string               //节点id
 	Address string               //节点地址
 	Port    int64                //节点端口
-	Client  pb.NodeServiceClient //节点连接
+	Client  pb.NodeServiceClient `json:"-"` //节点连接
 
 	TotalMem     int64   //总内存
 	UsageMem     int64   //使用内存
@@ -24,7 +24,8 @@ type Node struct {
 	UseCount         int64 //当前正在使用的人数
 	ConcurrencyCount int64 //并发数量
 
-	ContainerIdMap map[string]*Container //存放所有的Container K:V=containerId:Container
+	ContainerIdMap map[string]*Container `json:"-"` //存放所有的Container K:V=containerId:Container
+	FuncNameMap    map[string]bool       `json:"-"` //用于判断函数是否存在了
 }
 
 func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
@@ -39,6 +40,7 @@ func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
 		CpuUsagePct:      1,
 		UseCount:         0,
 		ConcurrencyCount: 1,
+		FuncNameMap:      make(map[string]bool),
 		ContainerIdMap:   make(map[string]*Container),
 	}
 	return node
@@ -91,6 +93,7 @@ func (n *Node) AddContainer(container *Container) {
 	defer n.lock.Unlock()
 
 	n.ContainerIdMap[container.ContainerId] = container
+	n.FuncNameMap[container.FuncName] = true
 }
 
 //根据containerId移除container  TODO 需要在全局中移除
@@ -100,5 +103,6 @@ func (n *Node) RemoveContainer(containerId string) *Container {
 
 	container := n.ContainerIdMap[containerId]
 	delete(n.ContainerIdMap, containerId)
+	delete(n.FuncNameMap, container.FuncName)
 	return container
 }

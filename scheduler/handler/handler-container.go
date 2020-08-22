@@ -16,6 +16,9 @@ func AsyncCreateContainer(funcName string, handler string, timeoutInMs int64, me
 }
 func CreateContainer(funcName string, handler string, timeoutInMs int64, memoryInBytes int64) {
 	node := core.GetSuitableNode(funcName, memoryInBytes)
+	if node == nil {
+		return
+	}
 
 	st := time.Now().UnixNano()
 	for {

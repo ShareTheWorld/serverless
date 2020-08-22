@@ -8,9 +8,9 @@ import (
 //表示一个函数实例
 //存放container信息
 type Container struct {
-	lock sync.RWMutex
+	lock sync.RWMutex `json:"-"`
 
-	ContainerId string  //容器id
+	ContainerId string  `json:"-"` //容器id
 	TotalMem    int64   //容器总内存
 	UsageMem    int64   //容器使用内存
 	CpuUsagePct float64 //容器使用百分比
@@ -19,7 +19,7 @@ type Container struct {
 	UseCount         int64  //使用数量
 	ConcurrencyCount int64  //支持并发数量
 
-	Node *Node //所属node
+	Node *Node `json:"-"` //所属node
 }
 
 func NewContainer() {

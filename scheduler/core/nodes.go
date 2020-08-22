@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -76,13 +77,18 @@ func GetNodes() []*Node {
 
 //得到一个合适的node
 func GetSuitableNode(funcName string, reqMem int64) *Node {
-	Lock.RLock()
-	defer Lock.RUnlock()
+	Lock.Lock()
+	defer Lock.Unlock()
 	size := len(nodes)
 	s := rand.Intn(size)
 	var node *Node
 	for i := 0; i < size; i++ {
 		n := nodes[(s+i)%size]
+
+		if n.FuncNameMap[funcName] { //如果这个node中已经有这个函数了，就不是合适的node
+			continue
+		}
+
 		if node == nil {
 			node = n
 			continue
@@ -91,7 +97,10 @@ func GetSuitableNode(funcName string, reqMem int64) *Node {
 			node = n
 		}
 	}
-	node.AvailableMem -= 128 * 1024 * 1024 //减少一点可用内存，避免下次再选中它，状态同步任务最后会自动修复它
+	if node != nil {
+		node.FuncNameMap[funcName] = true
+		node.AvailableMem -= 128 * 1024 * 1024 //减少一点可用内存，避免下次再选中它，状态同步任务最后会自动修复它
+	}
 	return node
 }
 
@@ -99,11 +108,13 @@ func PrintNodes(tag string) {
 	Lock.RLock()
 	defer Lock.RUnlock()
 	size := len(nodes)
-	fmt.Printf("*******************************%v**************************", tag)
+	fmt.Printf("*******************************%v**************************\n", tag)
 	for i := 0; i < size; i++ {
 		node := nodes[i]
-		fmt.Println(node)
+		jsonBytes1, _ := json.Marshal(node)
+		jsonBytes2, _ := json.Marshal(node.ContainerIdMap)
+		fmt.Println(string(jsonBytes1) + "," + string(jsonBytes2))
 	}
-	fmt.Printf("*******************************%v**************************", tag)
+	fmt.Printf("*******************************%v**************************\n", tag)
 
 }
