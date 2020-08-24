@@ -23,6 +23,9 @@ func Acquire(funcName string) *Container {
 	for _, k := range keys {
 		obj, _ := containerMap.Get(k)
 		c := obj.(*Container)
+		if c.Node.Status == 0 { //说明node不可以使用
+			continue
+		}
 		if c.UseCount >= c.ConcurrencyCount {
 			continue
 		}

@@ -23,6 +23,7 @@ type Node struct {
 
 	UseCount         int64 //当前正在使用的人数
 	ConcurrencyCount int64 //并发数量
+	Status           int   //1表示正常，0表示不以使用
 
 	ContainerIdMap map[string]*Container `json:"-"` //存放所有的Container K:V=containerId:Container
 	FuncNameMap    map[string]bool       `json:"-"` //用于判断函数是否存在了
@@ -40,6 +41,7 @@ func NewNode(reply *rmpb.ReserveNodeReply, client pb.NodeServiceClient) *Node {
 		CpuUsagePct:      1,
 		UseCount:         0,
 		ConcurrencyCount: 1,
+		Status:           1,
 		FuncNameMap:      make(map[string]bool),
 		ContainerIdMap:   make(map[string]*Container),
 	}

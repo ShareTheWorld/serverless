@@ -14,12 +14,12 @@ import (
 	当使用率低的时候就释放资源
 */
 const AccountId = "1317891723692367"      //TODO 线上可能会变化
-const MinNodeCount = 10                   //最少节点数量
+const MinNodeCount = 5                    //最少节点数量
 const MaxNodeCount = 20                   //最大节点数量
 const SleepTime = time.Millisecond * 2000 //睡眠时间
-const ReserveNodeStep = 2                 //发现node压力过大时，每次申请多少个node
+const ReserveNodeStep = 5                 //发现node压力过大时，每次申请多少个node
 
-const CpuReservePress = 0.6  //预定node的cpu压力
+const CpuReservePress = 0.35 //预定node的cpu压力
 const CpuReleasePress = 0.25 //释放node的cpu压力
 
 const MemReservePress = 0.7  //预定node的mem压力
@@ -88,7 +88,7 @@ func NodeManager() {
 	}
 }
 
-//将mem和cpu平均是用率转化为压力,-1表示需要是否node，0表示不需要做任何操作，1表示需要增加node
+//将mem和cpu平均是用率转化为动作,-1表示需要是否node，0表示不需要做任何操作，1表示需要增加node
 func Action(avgMemUsagePct float64, avgCpuUsagePct float64) int {
 	//mem和cpu有一个压力过大，就申请node
 	if avgMemUsagePct > MemReservePress || avgCpuUsagePct > CpuReservePress {
@@ -145,7 +145,7 @@ func DownNodesPress() {
 func CreateCpuFunction(node *core.Node, containers []*core.Container) {
 	//得到cpu密集型函数
 	for _, ctn := range containers {
-		go CreateContainerForNode(node, ctn.FuncName, ctn.Handler, ctn.TimeoutInMs, ctn.MemoryInBytes)
+		go CreateContainer(ctn.FuncName, ctn.Handler, ctn.TimeoutInMs, ctn.MemoryInBytes)
 	}
 }
 
@@ -199,7 +199,13 @@ func ReserveOneNode() *core.Node {
 //释放一个Node
 func ReleaseOneNode() {
 	node := core.RemoveLastNode() //这里从node池中移除了node，就不会再分配给其他节点了
-	for i := 0; i < 100; i++ {    //最多等待30秒
+	node.Status = 0               //让node变为不可使用
+	//从整体中移除container
+	for _, container := range node.ContainerIdMap {
+		core.RemoveContainer(container)
+	}
+
+	for i := 0; i < 100; i++ { //最多等待30秒
 		if node.UseCount <= 0 { //说明这个node没有使用者了
 			break
 		}
