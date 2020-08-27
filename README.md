@@ -1,5 +1,5 @@
 # serverless
-
+赛题链接: [【第二赛季】实现一个 Serverless 计算服务调度系统](https://tianchi.aliyun.com/competition/entrance/231793/information) https://tianchi.aliyun.com/competition/entrance/231793/information
 ### /docker
     存放常用的命令和docker打包需要的文件，其中的main文件是scheduler编译出来的可运行文件
     编译命令见scheduler
